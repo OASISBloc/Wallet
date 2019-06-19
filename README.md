@@ -1,5 +1,5 @@
 # OASISBloc Wallet
-A simple based OSB wallet
+A simple web based OSB wallet
 
 # Development
 
