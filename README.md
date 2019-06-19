@@ -3,9 +3,11 @@ A simple based OSB wallet
 
 # Development
 
-Install all it's dependencies.
+**Install all it's dependencies.**
 
 $ npm install
+
+**Start server**
 
 MacOS OR Linux
 
@@ -13,14 +15,16 @@ $ DEBUG=myapp:* npm start
 
 Windows
 
-> set DEBUG=myapp:* & npm start
+set DEBUG=myapp:* & npm start
 
-Open in browser.
+**Open in browser.**
+
 http://localhost:3000/
 
 
 
-Directory
+**Directory**
+
 
 .
 ├── app.js
