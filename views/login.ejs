@@ -1,0 +1,99 @@
+<script type="text/javascript" src="/js/jquery.validate.min.js"></script>
+
+        <!-- 본문영역 -->
+
+		<article class="white-note">
+			
+			<h2 class="tit-type01">Sign in</h2>
+
+            <!-- form-list -->
+            <form id="loginForm" name="loginForm">
+                <dl class="form-list">
+                    <dt>Enter account name</dt>	
+                    <dd>
+                        <div class="form-area">
+                            <div class="input-wrap has-clear">
+                                <input type="text" id="memAccount" name="memAccount" placeholder="Enter account name.">
+                                <span class="form-control-clear hidden">삭제</span>
+                            </div>
+                        </div>
+                    </dd>
+                    <dt>Password</dt>
+                    <dd>
+                        <div class="form-area">
+                            <div class="input-wrap has-clear password">
+                                <input type="password" id="memPwd" name="memPwd" placeholder="Enter password.">
+                                <a href="#" class="btn-code">암호화</a>
+                                <span class="form-control-clear hidden">삭제</span>
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+            </form>
+            <!-- //form-list -->
+
+			<div class="space40 mt70">
+				<button type="button" class="btn large blue" onclick="fnLogin()">Sign in</button><!-- 비활성화 : disabled = " disabled " -->
+				<label class="error" id="loginErr" name="loginErr" style="display: none;">The account name or password you entered is incorrect. Please check again.</label>
+				<p class="txt-type01 tar mt20">Don’t have an account?  <a href="/memJoin" class="txt-link bold">Create Account</a></p>
+			</div>
+
+		</article>
+
+		<!-- //본문영역 -->
+
+<script>
+    $(function() {
+        $("#loginForm").validate({
+            rules: {
+                memAccount: {
+                    required: true
+                }, memPwd: {
+                    required: true,
+                }
+            },
+            messages: {
+                memAccount: {
+                    required: "Enter account name."
+                }, memPwd: {
+                    required: "Enter password."
+                }
+            },
+            highlight: function(element, errorClass) {
+            },
+            errorPlacement: function(err, el) {
+                el.after(err);
+                var errCls = el.attr("class");
+                if (errCls == "error") {
+                    $(el).parent().addClass("error");
+                }
+            },
+            success: function(el) {
+                $(el).parent().removeClass("error");
+            }
+        });
+    });
+
+    function fnLogin() {
+        if ($('#loginForm').valid()) {
+            $.ajax({
+                url: '/loginAjax',
+                data: $("#loginForm").serialize(),
+                type: 'POST',
+                dataType: 'json',
+                success: function(data){
+                    if (data.result) {
+                        location.href = '/';
+                    } else {
+                        $("#loginErr").show();
+                    }
+                }
+                , error: function(error) {
+                    alert('Error occurred.');
+                }
+            });
+        }
+    }
+
+
+</script>

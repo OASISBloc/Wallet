@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<script type="text/javascript" src="/js/jquery-3.3.1.min.js"></script>
+	<script src="/js/ecc.js"></script>
+	<title>TEST</title>
+</head>
+<body>
+	<%=title%>
+	<br>
+	
+	<br>
+	privateKey :: <input type="text" id="privateKey" />
+	<br>
+    publicKey ::: <input type="text" id="publicKey" />
+	<br>
+	<br>
+	<button type="button" onclick="generate()">EOS key pair Create</button>
+    <br>
+    <br>
+    <a href="/">menu</a>
+	
+    <script>
+
+		let privateKeyPair = null;
+
+		function generate() {
+			setTimeout(() => {
+				privateKeyPair = genKeyPair();
+				$("#privateKey").val(privateKeyPair.privkey);
+				if (!privateKeyPair.privkeyError) {
+					console.log("private key Error :: " + privateKeyPair.privkeyError);
+				};
+				$("#publicKey").val(privateKeyPair.pubkey);
+				if (!privateKeyPair.pubkeyError) {
+					console.log("public key Error :: " + privateKeyPair.pubkeyError);
+				};
+				;
+			}, 10);
+		}
+
+		function genKeyPair() {
+			var {PrivateKey, PublicKey} = eos_ecc
+			var d = PrivateKey.randomKey()
+			var privkey = d.toWif()
+			var pubkey = d.toPublic().toString()
+
+			var pubkeyError = null
+			try {
+				PublicKey.fromStringOrThrow(pubkey)
+			} catch(error) {
+				console.log('pubkeyError', error, pubkey)
+				pubkeyError = error.message + ' => ' + pubkey
+			}
+
+			var privkeyError = null
+			try {
+				var pub2 = PrivateKey.fromWif(privkey).toPublic().toString()
+				if(pubkey !== pub2) {
+					throw {message: 'public key miss-match: ' + pubkey + ' !== ' + pub2}
+				}
+			} catch(error) {
+				console.log('privkeyError', error, privkey)
+				privkeyError = error.message + ' => ' + privkey
+			}
+
+			if(privkeyError || pubkeyError) {
+				privkey = 'DO NOT USE'
+				pubkey = 'DO NOT USE'
+			}
+
+			return {pubkey, privkey, pubkeyError, privkeyError}
+		}
+        
+    </script>
+</body>
+</html>

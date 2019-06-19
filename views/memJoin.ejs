@@ -1,0 +1,351 @@
+<script type="text/javascript" src="/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="/js/pubCommon.js"></script>
+
+		<!-- 본문영역 -->
+
+		<article class="white-note">
+			
+			<h2 class="tit-type01">Create an account</h2>
+            
+            <form id="createAccountFrom" name="createAccountFrom">
+                <!-- form-list -->
+                <dl class="form-list">
+                    <dt>Enter account name</dt>	
+                    <dd>
+                        <div class="form-area">
+                            <div class="input-wrap has-clear">
+                                <input type="text" id="memAccount" name="memAccount" oninput="fnBtnInit()" placeholder="12 characters / a-z / 1-5">
+                                <span class="form-control-clear hidden">삭제</span>
+                            </div>
+                            <div class="btn-area" style="width:240px;">
+                                <button type="button" class="btn middle blue" id="btnChkAccount" onclick="fnChkDuplAccount()" disabled="disabled">Check account availability</button><!-- 비활성화 : disabled = " disabled " -->
+                            </div>
+                        </div>
+                        <label class="pos-msg" style="display: none;">Available</label>
+                    </dd>
+                    <dt>Password</dt>	
+                    <dd>
+                        <div class="form-area">
+                            <div class="input-wrap has-clear">
+                                <input type="password" id="memPwd" name="memPwd" placeholder="8-15 characters including letters and numbers">
+                                <span class="form-control-clear hidden">삭제</span>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-area mt40">						
+                            <button type="button" class="btn middle blue" id="btnGenerateKey" onclick="fnGenerateKey()" disabled>Generate a key pair</button><!-- 비활성화 : disabled = " disabled " -->
+                        </div>
+                    </dd>
+
+                    <dt><strong>Public</strong> Key</dt>	
+                    <dd>
+                        <div class="form-area">
+                            <div class="input-wrap has-clear">
+                                <input type="text" id="osbPublicKey" name="osbPublicKey" readonly="readonly">
+                                <span class="form-control-clear hidden">삭제</span>
+                            </div>
+                        </div>
+                    </dd>
+                    <dt><strong>Private</strong> Key</dt>	
+                    <dd>
+                        <div class="form-area">
+                            <div class="input-wrap has-clear password">
+                                <input type="password" id="osbPrivateKey" readonly="readonly">
+                                <a href="javascript:;" class="btn-code">암호화</a>
+                                <span class="form-control-clear hidden">삭제</span>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-area dis-tbl mt10">
+                            <div class="warning cell top">
+                                <strong class="tit">Please paste it in a safe place!</strong>
+                                <p>Your keypair proves the account ownership.<br>
+                                    OSB Wallet does not store your data. We cannot access accounts, recover keys, reset passwords or<br>
+                                    reverse transactions. Please be careful about key management.</p>
+                            </div>
+                            <div class="cell tar" style="width:240px;">
+                                <button type="button" class="btn middle gray" id="btnCopy" onclick="fnBtnCopy()" disabled><span class="ico-pair">Copy keypair</span></button><!-- 비활성화 : disabled = " disabled " -->
+                            </div>
+                        </div>
+                    </dd>
+                    <dt>Email</dt>	
+                    <dd>
+                        <div class="form-area">
+                            <div class="input-wrap has-clear">
+                                <input type="text" id="memEmail" name="memEmail" placeholder="email">
+                                <span class="form-control-clear hidden">삭제</span>
+                            </div>
+                        </div>
+                        <ul class="mt20">
+                            <li>
+                                <label class="input-chk">
+                                    <input type="checkbox" id="agree_1" name="agree_1">
+                                    <span class="txt">I agree to provide my email address to receive updates.</span>
+                                </label>
+                            </li>
+                            <li class="mt10">
+                                <label class="input-chk">
+                                    <input type="checkbox" id="agree_2" name="agree_2">
+                                    <span class="txt">I agree that the private key management is solely my responsibility.</span>
+                                </label>
+                            </li>
+                        </ul>
+                        <P class="error" id="checkError" style="display: none;">Please check the required fields.</p>
+                    </dd>
+                </dl>
+            </form>
+            
+			<div class="space40 mt70">
+				<button type="button" class="btn large blue" id="btnCreateAccount" onclick="preCreateAccount();" disabled="disabled">Create Account</button><!-- 비활성화 : disabled = " disabled " -->
+				<p class="txt-type01 tar mt20">Already have an OSB account?  <a href="/login" class="txt-link bold">Sign in</a></p>
+			</div>
+			<!-- //form-list -->
+
+		</article>
+
+        <!-- //본문영역 -->
+
+<!-- 키 쌍 복사layer -->
+<div class="layer_wrap">
+    <div class="layer_popup" id="Popup_copykeypair_001">
+        <div class="inner sucess">
+            
+            <div class="cont">
+                
+                <!-- 팝업 본문 내용 -->
+
+                <p>Successfully copied to the clipboard!</p>
+                <p class="point">Please keep it in a safe place!</p>
+
+                <!-- //팝업 본문 내용 -->
+
+                <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
+
+            </div>
+
+            <div class="btn-area">
+                <a href="#n" class="btn middle blue" onclick="popupClose(this);">ok</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- //layer -->
+
+<!-- 계정 생성 layer -->
+<div class="layer_wrap">
+    <div class="layer_popup" id="Popup_register_002" style="width:535px;">
+        <div class="inner false">
+            
+            <div class="cont">
+                
+                <!-- 팝업 본문 내용 -->
+
+                <p class="point">Make sure you've saved the private key associated with this public key!</p>
+
+                <!-- //팝업 본문 내용 -->
+
+                <a href="javascript:;" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
+
+            </div>
+
+            <div class="btn-area flex">
+                <a href="javascript:;" class="btn middle blue" onclick="popupClose(this);">I forgot to copy keypair</a>
+                <a href="javascript:;" class="btn middle blue" onclick="createAccount();">I already copied</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- //layer -->
+	
+<script>
+    $(function() {
+        $("#createAccountFrom").validate({
+            rules: {
+                memAccount: {
+                    required: true,
+                    checkAccount: true
+                }, memPwd: {
+                    required: true,
+                    rangelength: [8, 15],
+                    checkPwd: true
+                }, memEmail: {
+                    required: true,
+                    email: true
+                }, agree_1: {
+                    chkAgree: true
+                }, agree_2: {
+                    chkAgree: true
+                }
+            },
+            messages: {
+                memAccount: {
+                    required: "Enter account name.",
+                    checkAccount: "Unavailable."
+                }, memPwd: {
+                    required: "Enter password.",
+                    rangelength: $.validator.format("Password should be between {0}~{1} characters including letters and numbers."),
+                }, memEmail: {
+                    required: "Enter your email address.",
+                    email: "Invalid email address. Please try again."
+                }
+            },
+            highlight: function(element, errorClass) {
+                if (errorClass == "error") {
+                    $(element).addClass("error");
+                }
+            },
+            errorPlacement: function(err, el) {
+                el.after(err);
+                var errCls = el.attr("class");
+                if (errCls == "error") {
+                    $(el).parent().addClass("error");
+                }
+            },
+            success: function(el) {
+                $(el).parent().removeClass("error");
+            }
+        });
+
+    });
+
+    // 계저 유효성 체크
+    $.validator.addMethod('checkAccount', function() {
+        return fnCheckAccount();
+    });
+
+    // 비밀번호 유효성 체크
+    $.validator.addMethod('checkPwd', function(value, element) {
+        var regPwd = /^.*(?=.*[0-9])(?=.*[a-zA-Z]).*$/;
+        return regPwd.test(value);
+    });
+
+    // agree checkbox 체크
+    $.validator.addMethod('chkAgree', function(value, element) {
+        var result = $("[name=" + element.id + "]").is(":checked")
+        var result1 = $('#agree_1').prop("checked");
+        var result2 = $('#agree_2').prop("checked");
+        if (!result1 || !result2) {
+            $("#checkError").show();
+        } else {
+            $("#checkError").hide();
+        }
+        return result;
+    }, '');
+
+    // 계정 유효성 체크
+    function fnCheckAccount() {
+        var regAcc = /^[a-z1-5+]{12}$/;
+        var chkResult = regAcc.test($("#memAccount").val());
+        if (chkResult) {
+            $("#btnChkAccount").removeAttr("disabled");
+        } else {
+            $("#btnChkAccount").attr("disabled", "disabled");
+        }
+        return chkResult;
+    }
+
+    // 계정 중복 체크
+    function fnChkDuplAccount() {
+        var result = false;
+        var account = $("#memAccount").val();
+        if (account.length == 12) {
+            $.ajax({
+                async: false,
+                cache: false,
+                url: '/checkDuplAccountAjax',
+                data: {'account': account},
+                type: 'POST',
+                dataType: 'json',
+                success: function(data){
+                    result = data.result;
+                    $("[name='memAccountMsg']").remove();
+                    if (result) {
+                        $("#memAccount").parent().append("<label class='error' name='memAccountMsg'>Unavailable</label>");
+                        $("#btnGenerateKey").attr("disabled", "disabled");
+                        $("#btnCreateAccount").attr("disabled", "disabled");
+                        $("#memAccount").addClass("error");
+                    } else {
+                        $("#memAccount").parent().append("<label class='pos-msg' name='memAccountMsg'>Available</label>");
+                        $("#btnGenerateKey").removeAttr("disabled");
+                        $("#btnCreateAccount").removeAttr("disabled");
+                        $("#memAccount").removeClass("error");
+                    }
+                }
+            });
+            return result;
+        } else {
+            return true;
+        }
+    }
+
+    function fnBtnInit() {
+        $("[name='memAccountMsg']").remove();
+        $("#btnGenerateKey").attr("disabled", "disabled");
+        $("#btnCreateAccount").attr("disabled", "disabled");
+        fnCheckAccount();
+    }
+
+    var keyGenFlg = false;  // key pair 생성 flg
+    function fnGenerateKey() {
+        $.ajax({
+            url: '/generateKeyAjax',
+            type: 'POST',
+            dataType: 'json',
+            success: function(data){
+                if (data.result) {
+                    $("#osbPublicKey").val(data.keyPair.publicKey);
+                    $("#osbPrivateKey").val(data.keyPair.privateKey);
+                    $("#btnCopy").removeAttr("disabled");
+                    keyGenFlg = true;
+                } else {
+                    alert("Failed generate key.");
+                }
+            }
+            , error: function(error) {
+                alert('Error occurred.');
+            }
+        });
+    }
+
+    function preCreateAccount() {
+        if ($('#createAccountFrom').valid()) {
+            popupOpen(Popup_register_002);
+        };
+    }
+
+    // 계정생성
+    function createAccount() {
+        if ($('#createAccountFrom').valid()) {
+            if (!keyGenFlg) {
+                alert("Not yet Generate a key pair");
+                return;
+            }
+
+            $.ajax({
+                url: '/createAccountAjax',
+                data: $("#createAccountFrom").serialize(),
+                type: 'POST',
+                dataType: 'json',
+                success: function(data){
+                    if (data.result) {
+                        location.href = '/memJoinComplete?memAccount=' + data.rtnDatas.memAccount;
+                    } else {
+                        alert(data.message);
+                    }
+                }
+                , error: function(error) {
+                    alert('Error occurred.');
+                }
+            });
+        }
+
+    }
+
+    function fnBtnCopy() {
+        var text = 'account:' + $("#memAccount").val() + ' privateKey:' + $("#osbPrivateKey").val() + ' publicKey:' +$("#osbPublicKey").val();
+        Clipboard.copy(text);
+        popupOpen(Popup_copykeypair_001);
+    }
+
+    
+</script>

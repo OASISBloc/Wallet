@@ -1,0 +1,45 @@
+<script type="text/javascript" src="/js/jquery.bxslider.min.js"></script>
+
+		<!-- 본문영역 -->
+
+		<div class="main-content">
+
+			<div class="process">
+
+				<ul class="bxslider">
+					<li class="num01"><span class="num">#1</span>Create Account</li>
+					<li class="num02"><span class="num">#2</span>Generate Key Pair</li>
+					<li class="num03"><span class="num">#3</span>Password</li>
+					<li class="num04"><span class="num">#4</span>Sign in</li>
+				</ul>
+
+				<script type="text/javascript">
+					var slider = $('.bxslider').bxSlider({
+						auto: true,
+						pager: true,
+						controls: false,
+						slideWidth: 578
+					});
+					$('.bx-wrapper').on('mouseenter',function(){
+						slider.stopAuto();
+					});
+					$('.bx-wrapper').on('mouseleave',function(){
+						slider.startAuto();
+					});
+				</script>
+
+				<div class="btn-area" name="noMemMeun">
+						<a href="/login" class="btn large blue">Sign in</a>
+						<a href="/memJoin" class="btn large gray">Create Account</a>
+				</div>
+			</div>
+
+			<div class="btn-direct">
+				<a href="/transfer?type=transfer" class="btn-transfer">Transfer</a>
+				<a href="/transfer?type=transaction" class="btn-transactions">Transactions</a>
+			</div>
+
+		</div>
+
+		<!-- //본문영역 -->
+

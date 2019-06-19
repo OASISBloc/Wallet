@@ -1,0 +1,411 @@
+<script type="text/javascript" src="/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="/js/pubCommon.js"></script>
+
+<!-- tab btn -->
+<ul class="tab-type01" id="tabActive01">
+    <li class="on" id="transfer"><a href="#tabCont0101" onclick="getBalance()">Transfer</a></li><!-- 활성화 class = " on " -->
+    <li id="transaction"><a href="#tabCont0102" onclick="transactions()">Transactions</a></li>
+</ul>
+<!-- //tab btn -->
+
+<!-- tab wrap -->
+<div class="tab-wrap type01" id="tabWrap01">
+
+    <!-- transfer -->
+    <div class="tab-cont" id="tabCont0101">
+        <form id="transForm" name="transForm">
+            <input type="hidden" id="myOSB">
+        <h2 class="tit-type01">Send Tokens</h2>
+        <dl class="form-list">
+            <dt>Send to</dt>
+            <dd>
+                <div class="form-area">
+                    <div class="input-wrap has-clear">
+                        <input id="sendTo" name="sendTo" type="text" placeholder="Account to receive tokens"><!-- 비활성화 disabled = 'disabled' -->
+                        <span class="form-control-clear hidden">삭제</span>
+                    </div>
+                </div>
+            </dd>
+            <dt>Amount</dt>
+            <dd>
+                <div class="form-area">
+                    <div class="input-wrap has-clear">
+                        <input id="amount" name="amount" type="text" placeholder="Amount of tokens to send">
+                        <span class="form-control-clear hidden">삭제</span>
+                    </div>
+                   							
+                </div>
+            </dd>
+            <dt>Memo (optional)</dt>
+            <dd>
+                <div class="form-area">
+                    <div class="input-wrap has-clear">
+                        <input id="memo" name="memo" type="text" placeholder=""><!-- 비활성화 disabled = 'disabled' -->
+                        <span class="form-control-clear hidden">삭제</span>
+                    </div>
+                </div>
+            </dd>
+            <dt>Private Key</dt>
+            <dd>
+                <div class="form-area">							
+                    <div class="input-wrap has-clear password">
+                        <input id="prvkey" name="prvkey" type="password" placeholder="51 characters">
+                        <a href="#n" class="btn-code">암호화</a>
+                        <span class="form-control-clear hidden">삭제</span>
+                    </div>
+                </div>
+            </dd>
+        </dl>
+        
+        <div class="space40 mt70">
+            <button type="button" class="btn large blue" id="btnTransfer" onclick="transfer()">Transfer</button><!-- 비활성화 : disabled = " disabled " -->
+        </div>
+    </form>
+    </div>
+    <!-- //transfer -->
+
+    <!-- transactions -->
+    <div class="tab-cont" id="tabCont0102">
+
+        <table class="transaction-tbl">
+            <caption></caption>
+            <colgroup>
+                <col style="width:31%">
+                <col style="width:22%">
+                <col style="width:13%">
+                <col style="width:34%">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>TXID</th>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Info</th>
+                </tr>
+            </thead>
+            <tbody id="transactionsList">
+            </tbody>
+        </table>
+
+    </div>
+    <!-- //transactions -->
+</div>
+<!-- layer -->
+<div class="layer_wrap">
+        <div class="layer_popup" id="Popup_transfer_001">
+            <div class="inner sucess"><!-- 팝업 컬러 구분 class : sucess(블루) , false(레드) -->
+                
+                <div class="cont">
+                    
+                    <!-- 팝업 본문 내용 -->
+    
+                    <p class="point">Successfully transferred!</p>
+                    <p>From <label id="lblFromAccount"></label> to <label id="lblToAccount"></label></p>
+    
+                    <!-- //팝업 본문 내용 -->
+    
+                    <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
+    
+                </div>
+    
+                <div class="btn-area">
+                    <a href="#n" class="btn middle blue" onclick="popupClose(this);">ok</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- //layer -->
+    <!-- layer -->
+<div class="layer_wrap">
+        <div class="layer_popup" id="Popup_signin_001">
+            <div class="inner false">
+                
+                <div class="cont">
+                    
+                    <!-- 팝업 본문 내용 -->
+    
+                    <p class="point">Sign in is required to transfer!</p>
+    
+                    <!-- //팝업 본문 내용 -->
+    
+                    <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
+    
+                </div>
+    
+                <div class="btn-area">
+                    <a href="#n" class="btn middle blue" onclick="popupClose(this);">ok</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- //layer -->
+    <!-- layer -->
+<div class="layer_wrap">
+        <div class="layer_popup" id="Popup_transfer_002">
+            <div class="inner false">
+                
+                <div class="cont">
+                    
+                    <!-- 팝업 본문 내용 -->
+    
+                    <p class="point">Error occurred!</p>
+                    <p class="err-msg"><label id="lblError"></label></p>
+    
+                    <!-- //팝업 본문 내용 -->
+    
+                    <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
+    
+                </div>
+    
+                <div class="btn-area">
+                    <a href="#n" class="btn middle blue" onclick="popupClose(this);">ok</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- //layer -->
+    
+<!-- //tab wrap -->
+
+<script>
+    $(function() {
+        var type = '<%=type%>';
+        if (type) {
+            $("#tabActive01 > li").removeClass("on");
+            $("#" + type).addClass("on");
+            tabActive('tabActive01');
+            
+            getBalance();
+            if (type == 'transaction') {
+                transactions();
+            }
+            
+        } else {
+            tabActive('tabActive01');
+            getBalance();
+        }
+
+        $("#transForm").validate({
+            rules: {
+                sendTo: {
+                    required: true,
+                    checkAccount: true
+                }, amount: {
+                    required: true,
+                    number: true,
+                    checkOverAmount: true,
+                    checkMinAmount: true,
+                }, prvkey: {
+                    required: true,
+                    rangelength: [51, 51],
+                }
+            },
+            messages: {
+                sendTo: {
+                    required: "Enter account name.",
+                    checkAccount: "Invalid account name."
+                }, amount: {
+                    required: "Enter amount.",
+                    checkOverAmount: "Over transferable amount.",
+                    checkMinAmount: "Must be greater than or equal to 0.001."
+                }, prvkey: {
+                    required: "Enter your private Key.",
+                    checkPrvkey: "Invalid private key.",
+                    rangelength: "Invalid private key."
+                }
+            },
+            highlight: function(element, errorClass) {
+                if (errorClass == "error") {
+                    $(element).addClass("error");
+                }
+            },
+            errorPlacement: function(err, el) {
+                el.after(err);
+                var errCls = el.attr("class");
+                if (errCls == "error") {
+                    $(el).parent().addClass("error");
+                }
+                
+            },
+            success: function(el) {
+                $(el).parent().removeClass("error");
+            }
+        });
+    });
+
+    // 계정 유효성 체크
+    $.validator.addMethod('checkAccount', function() {
+        return fnChkDuplAccount();
+    });
+
+    //전송금액 체크
+    $.validator.addMethod('checkOverAmount', function(){
+        var result = false;
+        var nowBalance = $("#myOSB").val();
+        var useBalance = $("#amount").val();
+
+        if(Number(useBalance) < Number(nowBalance)){
+            result = true;
+        }
+        return result;
+    });
+    $.validator.addMethod('checkMinAmount', function(){
+        var result = false;
+        var useBalance = $("#amount").val();
+        if(Number(useBalance) >= 0.0001){
+            result = true;
+        }
+        return result;
+    });
+
+    // 계정 중복 체크
+    function fnChkDuplAccount() {
+        var result = false;
+        var isAccount = false;
+        var account = $("#sendTo").val();
+        //if (account.length == 12) {
+            $.ajax({
+                async: false,
+                cache: false,
+                url: '/checkDuplAccountAjax',
+                data: {'account': account},
+                type: 'POST',
+                dataType: 'json',
+                success: function(data){
+                    result = data.result;
+                    $("[name='memAccountMsg']").remove();
+                    if (result) {
+                        isAccount = true;
+                        //$("#sendTo").parent().append("<label class='error' name='memAccountMsg'>Invalid account name.</label>");
+                    } else {
+                        isAccount = false;
+                        //$("#sendTo").parent().append("<label class='pos-msg' name='memAccountMsg'>Available</label>");
+                    }
+                }
+            });
+            return isAccount;
+        //} else {
+          //  return false;
+        //}
+    }
+
+    function getBalance() {
+        $.ajax({
+            async: false,
+            cache: false,
+            url: '/getBalance',
+            type: 'POST',
+            dataType: 'json',
+            success: function(data){
+                if (data.result) {
+                    $("#myOSB").val(data.message);
+                } else {
+                    $("#myOSB").val(0);
+                }
+                if(data.sessionAccount){
+                    $("#spSessionAccount").text(data.sessionAccount);
+                    $("#spBalance").text(Number(data.message).toLocaleString());
+
+                    $("#loginAft").show();
+                    $("#loginPre").hide();
+                }else{
+                    $("#loginAft").hide();
+                    $("#loginPre").show();
+                }
+            }
+            , error: function(error) {
+                alert('Error occurred.');
+            }
+        });
+    }
+
+    function transfer() {
+        if ($('#transForm').valid()) {
+            if($("#spSessionAccount").text() == ''){
+                popupOpen(Popup_signin_001);
+            }else{
+                    $.ajax({
+                    url: '/transferAjax',
+                    data: $("#transForm").serialize(),
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(data){
+                        if (data.result) {
+                            $("#lblFromAccount").text($("#spSessionAccount").text());
+                            $("#lblToAccount").text($("#sendTo").val());
+                            $("#transForm")[0].reset();
+                            popupOpen(Popup_transfer_001);
+                        } else {
+                            var errMsg = "Provided keys, permissions, and delays do not satisfy declared authorizations";
+                            $("#lblError").text(errMsg);
+                            popupOpen(Popup_transfer_002);
+                        }
+                    }
+                    , error: function(error) {
+                        var errMsg = "Provided keys, permissions, and delays do not satisfy declared authorizations";
+                        $("#lblError").text(errMsg);
+                        popupOpen(Popup_transfer_002);
+                    }
+                });
+            }   
+        }
+    }
+
+    function transactions() {
+        $.ajax({
+            url: '/getActions',
+            type: 'POST',
+            dataType: 'json',
+            success: function(data){
+                $("#transactionsList").empty();
+                var html = "";
+                if (data.result) {
+                    for(var i=0; i < data.message.length; i++){
+                        var tranInfo = data.message[i];
+                        var tranType = "point02";
+                        if(tranInfo[7] == "Received"){
+                            tranType = "point01";
+                        }
+                        html += "<tr>";
+                        html += "<td>";
+                        html += "<span class=\"txid\">"+tranInfo[0]+"</span>";
+                        html += "</td>";
+                        html += "<td>";
+                        html += "<span class=\"date\">"+tranInfo[2]+"</span>";
+                        html += "</td>";
+                        html += "<td>";
+                        html += "<span class=\"name "+tranType+"\">"+tranInfo[7]+"</span>";
+                        html += "</td>";
+                        html += "<td>";
+                        html += "<div class=\"arrow\">";
+                        html += "<span class=\"from\">"+tranInfo[3]+"</span>";
+                        html += "<span class=\"to\">"+tranInfo[4]+"</span>";
+                        html += "</div>";
+                        html += "<p class=\"data\">"+tranInfo[6]+"</p>";
+                        if(tranInfo[5] != ''){
+                            html += "<dl class=\"memo\">";
+                            html += "<dt class=\"tit\">Memo</dt>";
+                            html += "<dd>";
+                            html += "<p>"+tranInfo[5]+"</p>";
+                            html += "</dd>";
+                            html += "</dl>";
+                        }
+                        
+                        html += "</td>";
+                        html += "</tr>";
+                    }
+                } else {
+                    html += "<tr>";
+                    html += "<td colspan=\"4\" class=\"no-data\">NO DATA</td>";
+					html += "</tr>";
+                }
+                $("#transactionsList").append(html);
+                transactionTbl();
+            }
+            , error: function(error) {
+                alert('Error occurred.');
+            }
+        });
+    }
+    
+</script>

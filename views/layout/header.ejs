@@ -1,0 +1,39 @@
+<header class="header">
+	<div class="header-in">
+
+		<h1 class="logo"><a href="/">OASISBloc Wallet</a></h1>
+		<div class="lang">
+			<a href="#">ENG</a>
+		</div>
+
+	</div>
+</header>
+
+<script>
+	$(document).ajaxStart(function () {
+        $("body").prepend("<div class='loader'></div>");
+    });
+    $(document).ajaxStop(function() {
+        $(".loader").remove();
+	});
+	
+	$(function() {
+		// 로그인 체크
+		$.ajax({
+            url: '/checkLoginAjax',
+            type: 'POST',
+            dataType: 'json',
+            success: function(data){
+                if (data.result) {
+                    $("[name='noMemMeun']").hide();
+                } else {
+                    $("[name='noMemMeun']").show();
+                }
+            }
+            , error: function(error) {
+                alert('Error occurred.');
+            }
+        });
+	});
+
+</script>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<% include ./head %>
+</head>
+<body>
+<!-- Header -->
+<% include ./header %>
+<!-- //Header -->
+<!-- container -->
+<div class="container">
+	<!-- content -->
+	<section class="content">
+		<!-- login 이전 노출 -->
+		
+		<div class="user-info" style="display: none;" id="loginPre">
+			<div class="user">
+				<span>Sign in is required.</span>
+			</div>
+			<dl class="osb">
+				<dt>Total OSB Balance :</dt>
+				<dd>-</dd>
+			</dl>
+			<div class="btn-area">
+				<a href="/login" class="btn small sky">Sign in</a>
+			</div>
+		</div>
+		
+		<!-- //login 이전 노출 -->
+
+		<!-- login 이후 노출 -->
+		
+		<div class="user-info" style="display: none;" id="loginAft">
+			<div class="user">
+				<span id="spSessionAccount"></span>
+			</div>
+			<dl class="osb">
+				<dt>Total OSB Balance :</dt>
+				<dd><span id="spBalance"></span> OSB</dd>
+			</dl>
+			<div class="btn-area">
+				<a href="/logout" class="btn small sky">Sign out</a>
+			</div>
+		</div>
+		
+		<!-- //login 이후 노출 -->
+
+
+		<%- body %>
+	</section>
+	<!-- //content -->
+
+</div>
+<!-- //container -->
+
+<!-- Footer -->
+<% include ./footer %>
+<!-- //Footer -->
+
+<%- script %>
+
+</body>
+</html>
