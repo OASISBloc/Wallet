@@ -23,9 +23,9 @@ http://localhost:3000/
 
 
 
-**Directory**
+**Directory structure**
 
-
+```.
 .
 ├── app.js
 ├── bin
@@ -50,3 +50,4 @@ http://localhost:3000/
     │   └── index.ejs
     ├── error.ejs
     └── index.ejs
+```
