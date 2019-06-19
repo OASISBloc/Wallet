@@ -1,5 +1,9 @@
-# Wallet
-OASISBloc WAllet
+# OASISBloc Wallet
+A simple based OSB wallet
+
+# Development
+
+Install all it's dependencies.
 
 $ npm install
 
@@ -11,7 +15,7 @@ Windows
 
 > set DEBUG=myapp:* & npm start
 
-open your browser
+Open in browser.
 http://localhost:3000/
 
 
