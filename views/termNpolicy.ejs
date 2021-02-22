@@ -1,0 +1,50 @@
+<!-- 본문영역 -->
+<article class="white-note">
+<% if (termType == 'term') { %>
+    <h2 class="tit-type01">Term of service</h2>
+<% } %>
+<% if (termType == 'privacy') { %>
+    <h2 class="tit-type01">Privacy policy</h2>
+<% } %>
+
+    <dl class="terms-version">
+        <dt>See previous version</dt>
+        <dd>
+            <div class="select">
+                <button type="button" class="txt" id="showVer">22.03.2019 (v1.0)</button>
+                <ul id="ulVer">
+                    <li><a href="#n">22.03.2019 (v1.0)</a></li>
+                </ul>
+            </div>
+        </dd>
+    </dl>
+
+    <div class="terms-wrap">
+        <div class="terms" id="termsContent">
+            
+        </div>
+    </div>
+    
+</article>
+<!-- //본문영역 -->
+
+<script>
+    function clickTerms(boardId) {
+        $.ajax({
+            url: '/getTermAjax',
+            data: {boardId: boardId},
+			type: 'POST',
+			dataType: 'json',
+			success: function(data) {
+				if (data.result) {
+                    $("#termsContent").html(data.data.boardContent);
+                    $("#showVer").text(data.data.createDate + ' (' + data.data.termsVersion + ')');
+                    $("#ulVer").slideUp();
+				}
+			}
+			, error: function(error) {
+				alert('Error occurred.');
+			}
+        })
+    }
+</script>

@@ -1,0 +1,346 @@
+<script type="text/javascript" src="/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="/js/pubCommon.js"></script>
+<article class="token-view">
+
+    <h2>Tokens</h2>
+    <div class="token-list">
+        <ul id="myTokenList">
+            <li>
+                <a href="/transfer?type=<%=type%>&symbol=OSB" class="token-info">
+                    <span class="thumb"><img src="../img/content/token_logo.gif" alt=""></span>
+                    <p>
+                        <em id="myOSBAmount"></em>
+                        <span class="unit">OSB</span>
+                    </p>
+                    <p>
+                        <em></em>
+                        <span class="unit">USD</span>
+                    </p>
+                </a>
+<!--                <a href="#n" class="btn-del" onclick="popupOpen(Popup_delete_001);">delete</a>-->
+            </li>
+        </ul>
+    </div>
+
+    <div class="btn-area mt40">
+        <button type="button" class="btn large blue" id="btnToken" onclick="searchTokens();">Add Token</button><!-- 비활성화 : disabled = " disabled " -->
+    </div>
+
+
+    <!-- token-layer -->
+    <div class="token-layer">
+        <form id="searchTokenForm">
+        <div class="token-search">
+					<span class="search">
+						<input type="text" id="searchKeyword" name="searchKeyword">
+						<a href="#n" class="btn-search" onclick="searchTokens();">search</a>
+					</span>
+            <a href="#n" class="btn-close" id="btnTokenClose">close</a>
+        </div>
+
+        <div class="token-check">
+            <ul id="searchTokenList">
+            </ul>
+            <!-- token 검색 결과가 없을때 노출
+            <p class="no-token">There are no tokens to display.</p>
+            -->
+        </div>
+
+        <div class="btn-area mt40">
+            <button type="button" id="addTokenBtn" class="btn large blue" onclick="addToken();" disabled="disabled">Add</button><!-- 비활성화 : disabled = " disabled " -->
+        </div>
+        </form>
+    </div>
+    <!-- //token-layer -->
+    <!-- delete-popup-layer -->
+    <div class="layer_wrap">
+        <div class="layer_popup" id="Popup_delete_001">
+            <div class="inner false">
+
+                <div class="cont">
+
+                    <!-- 팝업 본문 내용 -->
+
+                    <p>Would you like to delete the OSB token?</p>
+
+                    <!-- //팝업 본문 내용 -->
+
+                    <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">close</a>
+
+                </div>
+
+                <div class="btn-area flex">
+                    <a href="#n" class="btn middle silver" onclick="popupClose(this);">Cancel</a>
+                    <a href="#n" class="btn middle blue" onclick="deleteMyToken();">ok</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- //delete-popup-layer -->
+</article>
+<script>
+    $(function() {
+
+        $('#btnToken').on('click', function(){
+            $('.token-layer').animate({
+                'top' : '65px'
+            }, 350);
+        });
+        $('#btnTokenClose').on('click', function(){
+            $('.token-layer').animate({
+                'top' : '100%'
+            }, 250);
+            $('#searchTokenList').empty();
+            $('#searchKeyword').val("");
+        });
+        getMyTokensBalance();
+        showMyTokens();
+
+        // $("#searchTokenForm").validate({
+        //     rules: {
+        //         searchKeyword: {
+        //             required: true,
+        //         }
+        //     },
+        //     messages: {
+        //         searchKeyword: {
+        //             required: "*input token's name for search.",
+        //         }
+        //     },
+        //     highlight: function(element, errorClass) {
+        //     },
+        //     errorPlacement: function(err, el) {
+        //         el.after(err);
+        //         var errCls = el.attr("class");
+        //         if (errCls == "error") {
+        //             $(el).parent().addClass("error");
+        //         }
+        //     },
+        //     success: function(el) {
+        //         $(el).parent().removeClass("error");
+        //     }
+        // });
+    });
+
+    function showMyTokens(){
+        var jStr;
+        $.ajax({
+            async: false,
+            cache: false,
+            url: '/showMyTokensAjax',
+            type: 'POST',
+            dataType: 'json',
+            success: function(data){
+                if (data.result) {
+                    if(data.accountTokens.length == 0){
+                        console.log("조회된 데이터가 없습니다.");
+                    }else{
+                        jStr = JSON.stringify(data.accountTokens);
+                        console.log("account tokens:" + jStr);
+                        data.accountTokens.forEach(function(account, i){
+                            var myTokenHtml = '';
+                            var tamount = $('#my'+ account.symbol + 'Hidden').val() ?  $('#my'+ account.symbol + 'Hidden').val() : '';
+                            myTokenHtml = makeMyTokens(account.symbol, tamount, 100000, account.logo_img);
+                            $('#myTokenList').append(myTokenHtml);
+                        })
+                    }
+                }else{
+                    console.log("조회된 데이터가 없습니다.");
+                }
+            }
+            , error: function(request, status, error) {
+                console.log("error: " + error);
+                alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                alert('Error occurred.');
+            }
+        });
+
+    }
+
+    function searchTokens() {
+        $('#addTokenBtn').attr("disabled",true);
+        var params = {
+            searchKeyword : $('#searchKeyword').val()
+        }
+        $.ajax({
+            async: false,
+            cache: false,
+            url: '/searchTokensAjax',
+            type: 'POST',
+            data: params,
+            dataType: 'json',
+            success: function(data){
+                $('#searchTokenList').empty();
+                if (data.result) {
+                    var tokenHtml = '';
+                    if(data.rows.length != 0){
+                        data.rows.forEach(function (row, i){
+                            console.log(row.symbol);
+                            tokenHtml = makeToken(row.logo_img, row.symbol);
+                            $('#searchTokenList').append(tokenHtml);
+                        })
+                    }else{
+                        tokenHtml = '<p class="no-token">There are no tokens to display.</p>';
+                        $('#searchTokenList').append(tokenHtml);
+                        console.log("There are no tokens to display.");
+                    }
+                }else{
+                    tokenHtml = '<p class="no-token">There are no tokens to display.</p>';
+                    $('#searchTokenList').append(tokenHtml);
+                }
+            }
+            , error: function(request, status, error) {
+                console.log("error: " + error);
+                alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                alert('Error occurred.');
+            }
+        });
+        $('.searchTokenCheck').each(function(){
+            var myTokensList = $('#myTokenList').children();
+            var choicedSymbol = $(this).next().text();
+            var dubChk = false;
+            $(this).on('click', function(){
+                var myToken ='';
+                myTokensList.each(function(token){
+                    myToken = $(this).children().eq(0).children().eq(1).children().eq(1).text();
+                    if(myToken == choicedSymbol){
+                        alert("This token is already added!");
+                        dubChk = true;
+                    }
+                });
+                if(dubChk){
+                    $(this).prop("checked", false);
+                }
+                if($('.searchTokenCheck:checked').length > 0){
+                    $('#addTokenBtn').attr("disabled",false);
+                }else{
+                    $('#addTokenBtn').attr("disabled",true);
+                }
+            });
+        });
+    }
+
+    function addToken(){
+        var symbol = '';
+        var logo_img = '';
+        var checkbox = $('.searchTokenCheck:checked');
+        var myTokenHtml = '';
+        if(checkbox.length == 0){
+            alert("추가할 토큰을 선택해주세요.");
+            return;
+        }else{
+            checkbox.each(function (){
+                symbol = $(this).parent().children().eq(2).text();
+                logo_img = $(this).parent().children().eq(0).children().eq(0).attr("src");
+                myTokenHtml = makeMyTokens(symbol, $('#my'+ symbol + 'Hidden').val(), 1000000, logo_img);
+                $('#myTokenList').append(myTokenHtml);
+                $('#btnTokenClose').click();
+                var params = {
+                    symbol : symbol
+                }
+                $.ajax({
+                    async: false,
+                    cache: false,
+                    url: '/addMyTokenAjax',
+                    type: 'POST',
+                    data: params,
+                    dataType: 'json',
+                    success: function(data){
+                        try{
+                            if(data.result) {
+                                console.log(data.message);
+                            }else{
+                                console.log(data.message);
+                            }
+                        }catch (e) {
+                            console.log("addToken error" + e);
+                        }
+                    }
+                    , error: function(request, status, error) {
+                        console.log("error: " + error);
+                        alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                        alert('Error occurred.');
+                    }
+                });
+            });
+        }
+    }
+
+    function showDeleteToken(self){
+        var symbol = self.prev().children().eq(1).children().eq(1).text();
+        $('#delToken').val(symbol);
+        popupOpen(Popup_delete_001);
+    }
+
+    function deleteMyToken(){
+        var delToken = '';
+        $('.myToken').each(function (){
+            if($('#delToken').val() == $(this).text()){
+                delToken = $(this).parent().parent().parent();
+            }
+        })
+        if(delToken == ''){
+            return;
+        }
+        delToken.remove();
+        popupClose(Popup_delete_001);
+        var params = {
+            symbol : $('#delToken').val()
+        }
+        $.ajax({
+            async: false,
+            cache: false,
+            url: '/removeMyTokenAjax',
+            type: 'POST',
+            data: params,
+            dataType: 'json',
+            success: function(data){
+                try{
+                    if(data.result) {
+                        console.log(data.message);
+                    }else{
+                        console.log(data.message);
+                    }
+                }catch (e) {
+                    console.log("deleteToken error" + e);
+                }
+            }
+            , error: function(request, status, error) {
+                console.log("error: " + error);
+                alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                alert('Error occurred.');
+            }
+        });
+    }
+
+    function makeMyTokens(symbol, tAmount, uAmount, logo_img){
+        var htmlStr = '';
+        htmlStr += '<li>';
+        htmlStr += '    <a href="/transfer?type=<%=type%>&symbol=' + symbol +'" class="token-info">';
+        htmlStr += '        <span class="thumb"><img src="' + logo_img + '" alt=""></span>';
+        htmlStr += '        <p>';
+        htmlStr += '            <em>' + tAmount + '</em>';
+        htmlStr += '            <span class="unit myToken">' + symbol + '</span>';
+        htmlStr += '        </p>';
+        htmlStr += '        <p>';
+        htmlStr += '            <em>' + uAmount + '</em>';
+        htmlStr += '            <span class="unit">USD</span>';
+        htmlStr += '        </p>';
+        htmlStr += '    </a>';
+        htmlStr += '    <a href="#n" class="btn-del" onclick="showDeleteToken($(this));">delete</a>';
+        htmlStr += '</li>';
+        return htmlStr;
+    }
+
+    function makeToken(logoImg, symbol) {
+        var htmlStr = '';
+        htmlStr += '<li>';
+        htmlStr += '    <label class="input-chk"> ';
+        htmlStr += '        <span class="thumb"><img src="' + logoImg + '" alt=""></span>';
+        htmlStr += '        <input type="checkbox" class="searchTokenCheck">';
+        htmlStr += '        <strong class="txt">' + symbol + '</strong>';
+        htmlStr += '    </label>';
+        htmlStr += '</li>';
+        return htmlStr;
+    }
+</script>
