@@ -2,13 +2,16 @@
 	<div class="header-in">
 
 		<h1 class="logo"><a href="/">OASISBloc Wallet</a></h1>
-		<div class="lang">
-			<a href="#">ENG</a>
-		</div>
-
+<!--		<div class="lang">-->
+<!--			<a href="#">ENG</a>-->
+<!--		</div>-->
+		<%if(account){%>
+			<div class="btn-log">
+					<a href="/logout">Sign out</a>
+			</div>
+		<%}%>
 	</div>
 </header>
-
 <script>
 	$(document).ajaxStart(function () {
         $("body").prepend("<div class='loader'></div>");

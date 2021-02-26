@@ -17,8 +17,7 @@
 					var slider = $('.bxslider').bxSlider({
 						auto: true,
 						pager: true,
-						controls: false,
-						slideWidth: 578
+						controls: false
 					});
 					$('.bx-wrapper').on('mouseenter',function(){
 						slider.stopAuto();
@@ -35,8 +34,15 @@
 			</div>
 
 			<div class="btn-direct">
-				<a href="/transfer?type=transfer" class="btn-transfer">Transfer</a>
-				<a href="/transfer?type=transaction" class="btn-transactions">Transactions</a>
+				<%if(account){%>
+						<a href="/tokens?type=transfer" class="btn-transfer">Transfer</a>
+						<a href="/tokens?type=transaction" class="btn-transactions">Transactions</a>
+				<%}else{%>
+						<a href="/login?type=transfer" class="btn-transfer">Transfer</a>
+						<a href="/login?type=transaction" class="btn-transactions">Transactions</a>
+				<%}%>
+
+
 			</div>
 
 		</div>

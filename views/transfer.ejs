@@ -1,9 +1,10 @@
 <script type="text/javascript" src="/js/jquery.validate.min.js"></script>
 <script type="text/javascript" src="/js/pubCommon.js"></script>
+<script type="text/javascript" src="/js/crypto-js.min.js"></script>
 
 <!-- tab btn -->
 <ul class="tab-type01" id="tabActive01">
-    <li class="on" id="transfer"><a href="#tabCont0101" onclick="getBalance()">Transfer</a></li><!-- 활성화 class = " on " -->
+    <li class="on" id="transfer"><a href="#tabCont0101">Transfer</a></li><!-- 활성화 class = " on " -->
     <li id="transaction"><a href="#tabCont0102" onclick="transactions()">Transactions</a></li>
 </ul>
 <!-- //tab btn -->
@@ -13,8 +14,9 @@
 
     <!-- transfer -->
     <div class="tab-cont" id="tabCont0101">
-        <form id="transForm" name="transForm">
-            <input type="hidden" id="myOSB">
+        <form id="transForm" name="transForm" autocomplete="off">
+            <input type="hidden" id="symbol" name="symbol">
+            <input type="hidden" id="pos" name="pos">
         <h2 class="tit-type01">Send Tokens</h2>
         <dl class="form-list">
             <dt>Send to</dt>
@@ -30,10 +32,10 @@
             <dd>
                 <div class="form-area">
                     <div class="input-wrap has-clear">
-                        <input id="amount" name="amount" type="text" placeholder="Amount of tokens to send">
+                        <input id="amount" name="amount" type="text" placeholder="Amount of tokens to send" oninput="checkAmount()">
                         <span class="form-control-clear hidden">삭제</span>
                     </div>
-                   							
+
                 </div>
             </dd>
             <dt>Memo (optional)</dt>
@@ -47,7 +49,7 @@
             </dd>
             <dt>Private Key</dt>
             <dd>
-                <div class="form-area">							
+                <div class="form-area">
                     <div class="input-wrap has-clear password">
                         <input id="prvkey" name="prvkey" type="password" placeholder="51 characters">
                         <a href="#n" class="btn-code">암호화</a>
@@ -56,9 +58,9 @@
                 </div>
             </dd>
         </dl>
-        
+
         <div class="space40 mt70">
-            <button type="button" class="btn large blue" id="btnTransfer" onclick="transfer()">Transfer</button><!-- 비활성화 : disabled = " disabled " -->
+            <button type="button" class="btn large blue" id="btnTransfer" onclick="checkTran()">Transfer</button><!-- 비활성화 : disabled = " disabled " -->
         </div>
     </form>
     </div>
@@ -67,7 +69,8 @@
     <!-- transactions -->
     <div class="tab-cont" id="tabCont0102">
 
-        <table class="transaction-tbl">
+        <!-- pc에서 노출 -->
+        <table class="transaction-tbl m-hid">
             <caption></caption>
             <colgroup>
                 <col style="width:31%">
@@ -86,104 +89,209 @@
             <tbody id="transactionsList">
             </tbody>
         </table>
+        <!-- //pc에서 노출 -->
 
+        <!-- 모바일에서 노출 -->
+        <ul class="transaction-list" id="mTransactionsList">
+        </ul>
+        <!-- //모바일에서 노출 -->
+
+        <div class="btn-more">
+            <button type="button" class="btn large blue" id="moreList" onclick="moreList();" disabled>More</button>
+        </div>
     </div>
     <!-- //transactions -->
 </div>
 <!-- layer -->
 <div class="layer_wrap">
-        <div class="layer_popup" id="Popup_transfer_001">
-            <div class="inner sucess"><!-- 팝업 컬러 구분 class : sucess(블루) , false(레드) -->
-                
-                <div class="cont">
-                    
-                    <!-- 팝업 본문 내용 -->
-    
-                    <p class="point">Successfully transferred!</p>
-                    <p>From <label id="lblFromAccount"></label> to <label id="lblToAccount"></label></p>
-    
-                    <!-- //팝업 본문 내용 -->
-    
-                    <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
-    
-                </div>
-    
-                <div class="btn-area">
-                    <a href="#n" class="btn middle blue" onclick="popupClose(this);">ok</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- //layer -->
-    <!-- layer -->
-<div class="layer_wrap">
-        <div class="layer_popup" id="Popup_signin_001">
-            <div class="inner false">
-                
-                <div class="cont">
-                    
-                    <!-- 팝업 본문 내용 -->
-    
-                    <p class="point">Sign in is required to transfer!</p>
-    
-                    <!-- //팝업 본문 내용 -->
-    
-                    <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
-    
-                </div>
-    
-                <div class="btn-area">
-                    <a href="#n" class="btn middle blue" onclick="popupClose(this);">ok</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- //layer -->
-    <!-- layer -->
-<div class="layer_wrap">
-        <div class="layer_popup" id="Popup_transfer_002">
-            <div class="inner false">
-                
-                <div class="cont">
-                    
-                    <!-- 팝업 본문 내용 -->
-    
-                    <p class="point">Error occurred!</p>
-                    <p class="err-msg"><label id="lblError"></label></p>
-    
-                    <!-- //팝업 본문 내용 -->
-    
-                    <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
-    
-                </div>
-    
-                <div class="btn-area">
-                    <a href="#n" class="btn middle blue" onclick="popupClose(this);">ok</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- //layer -->
-    
-<!-- //tab wrap -->
+    <div class="layer_popup" id="Popup_transfer_001">
+        <div class="inner sucess"><!-- 팝업 컬러 구분 class : sucess(블루) , false(레드) -->
 
+            <div class="cont">
+
+                <!-- 팝업 본문 내용 -->
+
+                <p class="point">Successfully transferred!</p>
+                <p>From <label id="lblFromAccount"></label> to <label id="lblToAccount"></label></p>
+
+                <!-- //팝업 본문 내용 -->
+
+                <a href="#n" class="btn_pop_cls" onclick="transferPopupClose(this);">닫기</a>
+
+            </div>
+
+            <div class="btn-area">
+                <a href="#n" class="btn middle blue" onclick="transferPopupClose(this);">ok</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- //layer -->
+<!-- layer -->
+<div class="layer_wrap">
+    <div class="layer_popup" id="Popup_signin_001">
+        <div class="inner false">
+
+            <div class="cont">
+
+                <!-- 팝업 본문 내용 -->
+
+                <p class="point">Sign in is required to transfer!</p>
+
+                <!-- //팝업 본문 내용 -->
+
+                <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
+
+            </div>
+
+            <div class="btn-area">
+                <a href="#n" class="btn middle blue" onclick="popupClose(this);">ok</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- //layer -->
+<!-- layer -->
+<div class="layer_wrap">
+    <div class="layer_popup" id="Popup_transfer_002">
+        <div class="inner false">
+
+            <div class="cont">
+
+                <!-- 팝업 본문 내용 -->
+
+                <p class="point">Error occurred!</p>
+                <p class="err-msg"><label id="lblError"></label></p>
+
+                <!-- //팝업 본문 내용 -->
+
+                <a href="#n" class="btn_pop_cls" onclick="popupClose(this);">닫기</a>
+
+            </div>
+
+            <div class="btn-area">
+                <a href="#n" class="btn middle blue" onclick="popupClose(this);">ok</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- //layer -->
+<!-- //layer -->
+<div class="layer_wrap" style="display: none;">
+	<div class="layer_popup" id="Popup_transfer_003" style="left: 542px;">
+		<div class="inner sucess">
+
+			<div class="cont">
+
+				<!-- 팝업 본문 내용 -->
+
+				<p class="point">Check transfer request</p>
+				<ul class="transfer-list">
+					<li>
+						<strong>From</strong>
+						<span class="val" id="spTranFrom">...</span>
+					</li>
+					<li>
+						<strong>To</strong>
+						<span class="val" id="spTranTo">...</span>
+					</li>
+					<li>
+						<strong><%=symbol%></strong>
+						<span class="val" id="spTranAmount">.0000</span>
+					</li>
+				</ul>
+
+				<!-- //팝업 본문 내용 -->
+
+				<a href="#n" class="btn_pop_cls" onclick="popupClose(this);">close</a>
+
+			</div>
+
+			<div class="btn-area flex" style="padding:0 20px;">
+				<a href="#n" class="btn middle silver" onclick="popupClose(this);">It is not right</a>
+				<a href="#n" class="btn middle blue" onclick="transfer()">Yes, that's right</a>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- //layer -->
+<div class="layer_wrap" style="display: none;">
+	<div class="layer_popup" id="Popup_transfer_004" style="left: 542px;">
+		<div class="inner">
+			
+			<div class="cont">
+				
+				<!-- 팝업 본문 내용 -->
+				
+				<p>안녕하세요?  OASISBloc Wallet 지원팀입니다.<br>
+                    거래 시 불편한 사항 발생에 대해, 아래의 이메일로 사용자의 ID와 문제 내용을 적어 문의주시면 신속한 처리 드리겠습니다.<br>
+                    <a href="mailto:Support@oasisbloc.io" class="btn-mail">Support@oasisbloc.io</a>
+                </p>
+
+				<!-- //팝업 본문 내용 -->
+
+			</div>
+
+			<div class="btn-area">
+				<a href="#n" class="btn middle blue" onclick="popupClose(this);">확인</a>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- //layer -->
 <script>
     $(function() {
+        popupOpen(Popup_transfer_004);
+        getMyTokensBalance();
+        $('#symbol').val('<%=symbol%>');
         var type = '<%=type%>';
         if (type) {
             $("#tabActive01 > li").removeClass("on");
             $("#" + type).addClass("on");
             tabActive('tabActive01');
             
-            getBalance();
+            //getBalance();
             if (type == 'transaction') {
                 transactions();
             }
             
         } else {
             tabActive('tabActive01');
-            getBalance();
+            //getBalance();
         }
+
+        // 계정 유효성 체크
+        $.validator.addMethod('checkAccount', function() {
+            return fnChkDuplAccount();
+        });
+
+        //전송금액 체크
+        $.validator.addMethod('checkOverAmount', function(){
+            var result = false;
+            var nowBalance = makeStrAmt($("#myOSBHidden").val());
+            var useBalance = makeStrAmt($("#amount").val());
+
+            if(Number(useBalance) <= Number(nowBalance)){
+                result = true;
+            }
+            return result;
+        });
+        $.validator.addMethod('checkMinAmount', function(){
+            var result = false;
+            var useBalance = makeStrAmt($("#amount").val());
+            if(Number(useBalance) >= 0.001){
+                result = true;
+            }
+            return result;
+        });
+        $.validator.addMethod('checkLimitAmount', function(){
+            var result = true;
+            var useBalance = makeStrAmt($("#amount").val());
+            if(Number(useBalance) > 100000000){
+                result = false;
+            }
+            return result;
+        });
 
         $("#transForm").validate({
             rules: {
@@ -195,9 +303,12 @@
                     number: true,
                     checkOverAmount: true,
                     checkMinAmount: true,
+                    checkLimitAmount: true,
                 }, prvkey: {
                     required: true,
                     rangelength: [51, 51],
+                }, memo: {
+                    maxlength: 256
                 }
             },
             messages: {
@@ -207,11 +318,14 @@
                 }, amount: {
                     required: "Enter amount.",
                     checkOverAmount: "Over transferable amount.",
-                    checkMinAmount: "Must be greater than or equal to 0.001."
+                    checkMinAmount: "Must be greater than or equal to 0.001.",
+                    checkLimitAmount: "Over transferable amount.",
                 }, prvkey: {
                     required: "Enter your private Key.",
                     checkPrvkey: "Invalid private key.",
                     rangelength: "Invalid private key."
+                }, memo: {
+                    maxlength: "Memo is too long."
                 }
             },
             highlight: function(element, errorClass) {
@@ -233,37 +347,36 @@
         });
     });
 
-    // 계정 유효성 체크
-    $.validator.addMethod('checkAccount', function() {
-        return fnChkDuplAccount();
-    });
-
-    //전송금액 체크
-    $.validator.addMethod('checkOverAmount', function(){
-        var result = false;
-        var nowBalance = $("#myOSB").val();
-        var useBalance = $("#amount").val();
-
-        if(Number(useBalance) < Number(nowBalance)){
-            result = true;
-        }
-        return result;
-    });
-    $.validator.addMethod('checkMinAmount', function(){
-        var result = false;
-        var useBalance = $("#amount").val();
-        if(Number(useBalance) >= 0.0001){
-            result = true;
-        }
-        return result;
-    });
+    function aesEncrypt(data) {        
+        var prvkey = '';
+        $.ajax({
+            async: false,
+            url: '/getRandomAjax',
+            type: 'POST',
+            dataType: 'json',
+            success: function(data){
+                if(data.result && data.data != "" && data.data != null){
+                    prvkey = data.data;
+                }else {
+                    var errText = '에러가 발생했습니다. OASISBloc Wallet 지원팀으로 연락부탁드립니다.';
+                    $("#lblError").text(errText);
+                    popupOpen(Popup_transfer_002);
+                }
+            }, error: function(error) {
+                return prvkey;
+            }
+        });
+        let cipher = CryptoJS.AES.encrypt(data, prvkey);
+        return cipher.toString(); 
+    }
 
     // 계정 중복 체크
     function fnChkDuplAccount() {
-        var result = false;
-        var isAccount = false;
-        var account = $("#sendTo").val();
-        //if (account.length == 12) {
+        try{
+            var result = false;
+            var isAccount = false;
+            var account = $("#sendTo").val();
+            //if (account.length == 12) {
             $.ajax({
                 async: false,
                 cache: false,
@@ -284,128 +397,362 @@
                 }
             });
             return isAccount;
-        //} else {
-          //  return false;
-        //}
+            //} else {
+            //  return false;
+            //}
+        }catch (e) {
+            console.log("fnChkDuplAccount error:" + e);
+        }
     }
 
     function getBalance() {
-        $.ajax({
-            async: false,
-            cache: false,
-            url: '/getBalance',
-            type: 'POST',
-            dataType: 'json',
-            success: function(data){
-                if (data.result) {
-                    $("#myOSB").val(data.message);
-                } else {
-                    $("#myOSB").val(0);
-                }
-                if(data.sessionAccount){
-                    $("#spSessionAccount").text(data.sessionAccount);
-                    $("#spBalance").text(Number(data.message).toLocaleString());
+        console.log("getBalance in");
+        try{
+            $.ajax({
+                async: false,
+                cache: false,
+                url: '/getBalance',
+                type: 'POST',
+                dataType: 'json',
+                success: function(data){
+                    if (data.result) {
+                        $("#myOSB").val(data.message);
+                    } else {
+                        $("#myOSB").val(0);
+                    }
+                    if(data.sessionAccount){
+                        $("#spSessionAccount").text(data.sessionAccount);
+                        $("#spBalance").text(parseFloat(data.message).toLocaleString(undefined, {maximumFractionDigits:4}));
 
-                    $("#loginAft").show();
-                    $("#loginPre").hide();
-                }else{
-                    $("#loginAft").hide();
-                    $("#loginPre").show();
+                        $("#loginAft").show();
+                        $("#loginPre").hide();
+                    }else{
+                        $("#loginAft").hide();
+                        $("#loginPre").show();
+                    }
                 }
-            }
-            , error: function(error) {
-                alert('Error occurred.');
-            }
-        });
+                , error: function(error) {
+                    alert('Error occurred.');
+                }
+            });
+        }catch (e) {
+            console.log("getBalance error:" + e);
+        }
+    }
+
+    function checkTran(){
+        if ($('#transForm').valid()) {
+            $('#spTranFrom').text($('#spSessionAccount').text());
+            $('#spTranTo').text($('#sendTo').val());
+            $('#spTranAmount').text($('#amount').val());
+
+            popupOpen(Popup_transfer_003);
+        }
     }
 
     function transfer() {
-        if ($('#transForm').valid()) {
-            if($("#spSessionAccount").text() == ''){
-                popupOpen(Popup_signin_001);
-            }else{
+        try{
+            if ($('#transForm').valid()) {
+                popupClose(Popup_transfer_003);
+                if($("#spSessionAccount").text() == ''){
+                    popupOpen(Popup_signin_001);
+                }else{
+                    let prvkey = $('#prvkey').val();
+                    $('#prvkey').val(aesEncrypt(prvkey));
                     $.ajax({
-                    url: '/transferAjax',
-                    data: $("#transForm").serialize(),
-                    type: 'POST',
-                    dataType: 'json',
-                    success: function(data){
-                        if (data.result) {
-                            $("#lblFromAccount").text($("#spSessionAccount").text());
-                            $("#lblToAccount").text($("#sendTo").val());
-                            $("#transForm")[0].reset();
-                            popupOpen(Popup_transfer_001);
-                        } else {
+                        url: '/transferAjax',
+                        data: $("#transForm").serialize(),
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(data){
+                            if (data.result) {
+                                $("#lblFromAccount").text($("#spSessionAccount").text());
+                                $("#lblToAccount").text($("#sendTo").val());
+                                $("#transForm")[0].reset();
+                                //getBalance();
+                                popupOpen(Popup_transfer_001);
+                            } else {
+                                $("#lblError").text(data.message);
+                                popupOpen(Popup_transfer_002);
+                            }
+                        }
+                        , error: function(error) {
                             var errMsg = "Provided keys, permissions, and delays do not satisfy declared authorizations";
                             $("#lblError").text(errMsg);
                             popupOpen(Popup_transfer_002);
                         }
-                    }
-                    , error: function(error) {
-                        var errMsg = "Provided keys, permissions, and delays do not satisfy declared authorizations";
-                        $("#lblError").text(errMsg);
-                        popupOpen(Popup_transfer_002);
-                    }
-                });
-            }   
+                    });
+                }
+            }
+        }catch (e) {
+            console.log("transfer error:" + e);
         }
     }
 
     function transactions() {
-        $.ajax({
-            url: '/getActions',
-            type: 'POST',
-            dataType: 'json',
-            success: function(data){
-                $("#transactionsList").empty();
-                var html = "";
-                if (data.result) {
-                    for(var i=0; i < data.message.length; i++){
-                        var tranInfo = data.message[i];
-                        var tranType = "point02";
-                        if(tranInfo[7] == "Received"){
-                            tranType = "point01";
+        try{
+            var localtime = new Date();
+            var timezoneoffset = (-1) * localtime.getTimezoneOffset() / 60;
+            $.ajax({
+                url: '/getActions',
+                type: 'POST',
+                data: {'timezoneoffset': timezoneoffset, 'symbol': '<%=symbol%>'},
+                dataType: 'json',
+                success: function(data){
+                    $("#transactionsList").empty();
+                    $("#mTransactionsList").empty();
+                    var html = "";
+                    var mHtml = "";
+                    if (data.result) {
+                        $('#pos').val(data.pos);
+                        console.log("data.message.length:" + data.message.length)
+                        for (var i=0; i < data.message.length; i++) {
+                            var tranInfo = data.message[i];
+                            var tranType = "point02";
+                            if (tranInfo[7] == "Received") {
+                                tranType = "point01";
+                            }
+                            // PC 버전
+                            html += "<tr>";
+                            html += "<td>";
+                            html += "<a class=\"txid\" href=\"<%=config.explorerUrl%>/search?q=" + tranInfo[0] + "\" target=\"_blank\">" + tranInfo[0] + "</a>";
+                            html += "</td>";
+                            html += "<td>";
+                            html += "<span class=\"date\">" + tranInfo[2] + "</span>";
+                            html += "</td>";
+                            html += "<td>";
+                            html += "<span class=\"name " + tranType + "\">" + tranInfo[7] + "</span>";
+                            html += "</td>";
+                            html += "<td>";
+                            html += "<div class=\"arrow\">";
+                            html += "<span class=\"from\">" + tranInfo[3] + "</span>";
+                            html += "<span class=\"to\">" + tranInfo[4] + "</span>";
+                            html += "</div>";
+                            html += "<p class=\"data\">" + parseFloat(tranInfo[6]).toLocaleString(undefined, {maximumFractionDigits:4}) + " <%=symbol%></p>";
+                            if (tranInfo[5] != '') {
+                                html += "<dl class=\"memo\">";
+                                html += "<dt class=\"tit\">Memo</dt>";
+                                html += "<dd>";
+                                html += "<p>" + tranInfo[5] + "</p>";
+                                html += "</dd>";
+                                html += "</dl>";
+                            }
+
+                            html += "</td>";
+                            html += "</tr>";
+
+                            //  Mobile 버전
+                            mHtml += "<li>";
+                            mHtml += "    <div class=\"flex\">";
+                            mHtml += "        <span class=\"date\">" + tranInfo[2] + "</span>";
+                            mHtml += "        <span class=\"name " + tranType + "\">" + tranInfo[7] + "</span>";
+                            mHtml += "    </div>";
+                            mHtml += "    <div class=\"arrow\">";
+                            mHtml += "        <span class=\"from\">" + tranInfo[3] + "</span>";
+                            mHtml += "        <span class=\"to\">" + tranInfo[4] + "</span>";
+                            mHtml += "    </div>";
+                            mHtml += "    <p class=\"data\">" + parseFloat(tranInfo[6]).toLocaleString(undefined, {maximumFractionDigits:4}) + "</p>";
+                            mHtml += "    <a href=\"<%=config.explorerUrl%>/search?q=" + tranInfo[0] + "\" class=\"txid\">" + tranInfo[0] + "</a>";
+                            if (tranInfo[5] != '') {
+                                mHtml += "    <dl class=\"memo\">";
+                                mHtml += "        <dt class=\"tit\">Memo</dt>";
+                                mHtml += "        <dd>";
+                                mHtml += "            <p>" + tranInfo[5] + "</p>";
+                                mHtml += "        </dd>";
+                                mHtml += "    </dl>";
+                            }
+                            mHtml += "</li>";
                         }
+                    } else {
                         html += "<tr>";
-                        html += "<td>";
-                        html += "<span class=\"txid\">"+tranInfo[0]+"</span>";
-                        html += "</td>";
-                        html += "<td>";
-                        html += "<span class=\"date\">"+tranInfo[2]+"</span>";
-                        html += "</td>";
-                        html += "<td>";
-                        html += "<span class=\"name "+tranType+"\">"+tranInfo[7]+"</span>";
-                        html += "</td>";
-                        html += "<td>";
-                        html += "<div class=\"arrow\">";
-                        html += "<span class=\"from\">"+tranInfo[3]+"</span>";
-                        html += "<span class=\"to\">"+tranInfo[4]+"</span>";
-                        html += "</div>";
-                        html += "<p class=\"data\">"+tranInfo[6]+"</p>";
-                        if(tranInfo[5] != ''){
-                            html += "<dl class=\"memo\">";
-                            html += "<dt class=\"tit\">Memo</dt>";
-                            html += "<dd>";
-                            html += "<p>"+tranInfo[5]+"</p>";
-                            html += "</dd>";
-                            html += "</dl>";
-                        }
-                        
-                        html += "</td>";
+                        html += "   <td colspan=\"4\" class=\"no-data\">NO DATA</td>";
                         html += "</tr>";
+
+                        mHtml += "<li class=\"nodata\">NO DATA</li>";
                     }
-                } else {
-                    html += "<tr>";
-                    html += "<td colspan=\"4\" class=\"no-data\">NO DATA</td>";
-					html += "</tr>";
+                    $("#transactionsList").append(html);
+                    $("#mTransactionsList").append(mHtml);
+                    $('#moreList').attr("disabled",false);
+                    // transactionTbl();
                 }
-                $("#transactionsList").append(html);
-                transactionTbl();
-            }
-            , error: function(error) {
-                alert('Error occurred.');
-            }
-        });
+                , error: function(error) {
+                    alert('Error occurred.');
+                }
+            });
+        }catch (e) {
+            console.log("transaction error:" + e);
+        }
     }
     
+    function checkAmount() {
+        if ($("#amount").val() != '') {
+            var inAmt = $("#amount").val();
+
+            // 소숫점 자동 '0' 붙이기 
+            var firstDotIndex = inAmt.indexOf('.');
+            if (firstDotIndex == 0) {
+                $("#amount").val('0.');
+                return false;
+            }
+            // '.'이 1개만 허용
+            var dotLen = inAmt.match(/[.]/g);
+            if (dotLen != null && 1 < dotLen.length) {
+                var intAmt = inAmt.substring(0, firstDotIndex);
+                var dotInAmt = inAmt.substring(firstDotIndex, inAmt.length)
+                var repDotAmt = uncomma(dotInAmt);
+
+                inAmt = intAmt + "." + repDotAmt;
+                $("#amount").val(inAmt);
+                return false;
+            }
+            // 소숫점 4자리까지만 허용
+            var dotInAmt = firstDotIndex > 0 ? inAmt.substring(firstDotIndex + 1, inAmt.length) : '0';
+            if (dotInAmt.length > 4) {
+                inAmt = inAmt.substring(0, inAmt.length-1);
+                $("#amount").val(inAmt);
+                return false;
+            }
+            
+            if (inAmt.substring(0, 1) == '0' && inAmt.length == 2 && '.' != inAmt.substring(1, 2)) {
+                $("#amount").val('0.' + inAmt.substring(1, inAmt.length));
+            } else {
+                var amtArray = inAmt.split('.');
+                var amtIntVal;
+                if (amtArray.length > 1) {
+                    var amtArray0 = parseFloat(uncomma(amtArray[0]));
+                    amtIntVal = comma(amtArray0) + "." + uncomma(amtArray[1]);
+                } else {
+                    amtIntVal = comma(uncomma(amtArray[0]));
+                }
+                $("#amount").val(amtIntVal);
+            }
+        }
+    }
+
+    //콤마찍기
+    function comma(str) {
+        str = String(str);
+        return str.replace(/(\d)(?=(?:\d{3})+(?!\d))/g, '$1,');
+    }
+
+    //콤마풀기
+    function uncomma(str) {
+        str = String(str);
+        return str.replace(/[^\d]+/g, '');
+    }
+
+    // 금액에 ',' 제거 및 소숫점 처리
+    function makeStrAmt(amt) {
+        var amtArray =amt.split('.');
+        var intAmt = uncomma(amtArray[0]);
+        var dotAmt = amtArray[1] ? '.' + amtArray[1] : '';
+        return intAmt + dotAmt;
+    }
+
+    //layer popup close
+    function transferPopupClose(e){
+        $(e).parents('.layer_wrap:visible').hide();
+        location.href = '/transfer?type=transfer&symbol=' + '<%=symbol%>';
+    }
+
+    function moreList() {
+        try{
+            var localtime = new Date();
+            var timezoneoffset = (-1) * localtime.getTimezoneOffset() / 60;
+            console.log($('#pos').val());
+            $.ajax({
+                url: '/getActions',
+                type: 'POST',
+                data: {'timezoneoffset': timezoneoffset, 'symbol': '<%=symbol%>', pos : $('#pos').val()},
+                dataType: 'json',
+                success: function(data){
+                    $('#pos').val(data.pos);
+                    console.log(data.pos);
+                    if(data.pos > 0){
+                        // $("#transactionsList").empty();
+                        // $("#mTransactionsList").empty();
+                        var html = "";
+                        var mHtml = "";
+                        if (data.result) {
+                            console.log("data.message.length:" + data.message.length)
+                            for (var i=0; i < data.message.length; i++) {
+                                var tranInfo = data.message[i];
+                                var tranType = "point02";
+                                if (tranInfo[7] == "Received") {
+                                    tranType = "point01";
+                                }
+                                // PC 버전
+                                html += "<tr>";
+                                html += "<td>";
+                                html += "<a class=\"txid\" href=\"<%=config.explorerUrl%>/search?q=" + tranInfo[0] + "\" target=\"_blank\">" + tranInfo[0] + "</a>";
+                                html += "</td>";
+                                html += "<td>";
+                                html += "<span class=\"date\">" + tranInfo[2] + "</span>";
+                                html += "</td>";
+                                html += "<td>";
+                                html += "<span class=\"name " + tranType + "\">" + tranInfo[7] + "</span>";
+                                html += "</td>";
+                                html += "<td>";
+                                html += "<div class=\"arrow\">";
+                                html += "<span class=\"from\">" + tranInfo[3] + "</span>";
+                                html += "<span class=\"to\">" + tranInfo[4] + "</span>";
+                                html += "</div>";
+                                html += "<p class=\"data\">" + parseFloat(tranInfo[6]).toLocaleString(undefined, {maximumFractionDigits:4}) + " <%=symbol%></p>";
+                                if (tranInfo[5] != '') {
+                                    html += "<dl class=\"memo\">";
+                                    html += "<dt class=\"tit\">Memo</dt>";
+                                    html += "<dd>";
+                                    html += "<p>" + tranInfo[5] + "</p>";
+                                    html += "</dd>";
+                                    html += "</dl>";
+                                }
+
+                                html += "</td>";
+                                html += "</tr>";
+
+                                //  Mobile 버전
+                                mHtml += "<li>";
+                                mHtml += "    <div class=\"flex\">";
+                                mHtml += "        <span class=\"date\">" + tranInfo[2] + "</span>";
+                                mHtml += "        <span class=\"name " + tranType + "\">" + tranInfo[7] + "</span>";
+                                mHtml += "    </div>";
+                                mHtml += "    <div class=\"arrow\">";
+                                mHtml += "        <span class=\"from\">" + tranInfo[3] + "</span>";
+                                mHtml += "        <span class=\"to\">" + tranInfo[4] + "</span>";
+                                mHtml += "    </div>";
+                                mHtml += "    <p class=\"data\">" + parseFloat(tranInfo[6]).toLocaleString(undefined, {maximumFractionDigits:4}) + "</p>";
+                                mHtml += "    <a href=\"<%=config.explorerUrl%>/search?q=" + tranInfo[0] + "\" class=\"txid\">" + tranInfo[0] + "</a>";
+                                if (tranInfo[5] != '') {
+                                    mHtml += "    <dl class=\"memo\">";
+                                    mHtml += "        <dt class=\"tit\">Memo</dt>";
+                                    mHtml += "        <dd>";
+                                    mHtml += "            <p>" + tranInfo[5] + "</p>";
+                                    mHtml += "        </dd>";
+                                    mHtml += "    </dl>";
+                                }
+                                mHtml += "</li>";
+                            }
+                            $('#addTokenBtn').attr("disabled",true);
+                        } else {
+                            html += "<tr>";
+                            html += "   <td colspan=\"4\" class=\"no-data\">NO DATA</td>";
+                            html += "</tr>";
+
+                            mHtml += "<li class=\"nodata\">NO DATA</li>";
+                        }
+                        $("#transactionsList").append(html);
+                        $("#mTransactionsList").append(mHtml);
+                        // transactionTbl();
+                    }else{
+                        $('#moreList').attr("disabled",true);
+                    }
+                }
+                , error: function(error) {
+                    alert('Error occurred.');
+                }
+            });
+        }catch (e) {
+            console.log("transaction error:" + e);
+        }
+    }
 </script>

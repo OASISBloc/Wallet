@@ -3,7 +3,7 @@ var ejs = require('ejs');
 var commonController = {
     //aws 메일 발송
     awsMail: async function(params) {
-        await ejs.renderFile(__dirname + '/../views/' + params.emailFormNm, params, function(err, data) {
+        await ejs.renderFile(__dirname + '/../views/mailForm/' + params.emailFormNm, params, function(err, data) {
             //console.log(err || data);
             if (!err) {
                 var nodemailer = require('nodemailer');

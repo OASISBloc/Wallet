@@ -140,6 +140,7 @@
                         data.accountTokens.forEach(function(account, i){
                             var myTokenHtml = '';
                             var tamount = $('#my'+ account.symbol + 'Hidden').val() ?  $('#my'+ account.symbol + 'Hidden').val() : '';
+                            console.log(account.symbol);
                             myTokenHtml = makeMyTokens(account.symbol, tamount, 100000, account.logo_img);
                             $('#myTokenList').append(myTokenHtml);
                         })

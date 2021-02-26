@@ -35,7 +35,11 @@
 			<div class="space40 mt70">
 				<button type="button" class="btn large blue" onclick="fnLogin()">Sign in</button><!-- 비활성화 : disabled = " disabled " -->
 				<label class="error" id="loginErr" name="loginErr" style="display: none;">The account name or password you entered is incorrect. Please check again.</label>
-				<p class="txt-type01 tar mt20">Don’t have an account?  <a href="/memJoin" class="txt-link bold">Create Account</a></p>
+                <!-- 20190430 수정 -->
+				<div class="clear txt-type01 mt20 m-center">
+					<a href="/forgotPassword" class="fl txt-link bold">Forgot your password?</a>
+					<p class="fr">Don’t have an account?  <a href="/memJoin" class="txt-link bold">Create Account</a></p>
+				</div>
 			</div>
 
 		</article>
@@ -83,7 +87,7 @@
                 dataType: 'json',
                 success: function(data){
                     if (data.result) {
-                        location.href = '/';
+                        location.href = '/tokens?type=<%=type%>';
                     } else {
                         $("#loginErr").show();
                     }

@@ -14,8 +14,12 @@
                     <dd>
                         <div class="form-area">
                             <div class="input-wrap has-clear">
-                                <input type="text" id="memAccount" name="memAccount" oninput="fnBtnInit()" placeholder="12 characters / a-z / 1-5">
+                                <input type="text" id="memAccount" name="memAccount" oninput="fnBtnInit()" placeholder="12 characters / a-z / 1-5" class="txt-length">
+                                <!-- <span id="memAccountLen"></span> -->
                                 <span class="form-control-clear hidden">삭제</span>
+                                <div class="bar-chart">
+                                    <p class="bar"><span><em class="num">0</em> / 12</span></p>
+                                </div>
                             </div>
                             <div class="btn-area" style="width:240px;">
                                 <button type="button" class="btn middle blue" id="btnChkAccount" onclick="fnChkDuplAccount()" disabled="disabled">Check account availability</button><!-- 비활성화 : disabled = " disabled " -->
@@ -28,6 +32,15 @@
                         <div class="form-area">
                             <div class="input-wrap has-clear">
                                 <input type="password" id="memPwd" name="memPwd" placeholder="8-15 characters including letters and numbers">
+                                <span class="form-control-clear hidden">삭제</span>
+                            </div>
+                        </div>
+                    </dd>
+                    <dt>Repeat Password</dt>	
+                    <dd>
+                        <div class="form-area">
+                            <div class="input-wrap has-clear">
+                                <input type="password" id="memPwd_ok" name="memPwd_ok" placeholder="8-15 characters including letters and numbers">
                                 <span class="form-control-clear hidden">삭제</span>
                             </div>
                         </div>
@@ -92,6 +105,23 @@
                         </ul>
                         <P class="error" id="checkError" style="display: none;">Please check the required fields.</p>
                     </dd>
+
+                    <script src='https://www.google.com/recaptcha/api.js?hl=en'></script>
+                    <div class="captcha-wrap" id="recaptchaDiv" style="display: none;">
+                        <div class="g-recaptcha" data-sitekey="<%=config.recaptchaSite %>" data-callback="recaptchaCallback"></div>
+                    </div>
+
+                    <link href="/css/slidercaptcha.css" rel="stylesheet">
+                    <script src="/js/longbow.slidercaptcha.js"></script>
+                    <div class="slidercaptcha card" id="slidercaptchaDiv" style="display: none;">
+                        <div class="card-header">
+                            <span>Drag To Verify</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="slidercaptcha"></div>
+                        </div>
+                    </div>
+
                 </dl>
             </form>
             
@@ -158,7 +188,64 @@
 <!-- //layer -->
 	
 <script>
+    var conIp = "";
+    var conCountry = "";
+    var captchaKind = "";
+    var captchaFlg = false;
     $(function() {
+        var lang = navigator.language || navigator.userLanguage;
+        console.log("browser lang :: " + lang);
+        
+        if (lang.indexOf('zh') > -1) {
+            $("#slidercaptchaDiv").show();
+            captchaKind = 'slider';
+        } else {
+            $("#recaptchaDiv").show();
+            captchaKind = 're';
+        }
+        // $.getJSON("http://ipinfo.io", function(data) {   // 1달에 5만건 사용 가능
+        //     conIp = data.ip;
+        //     conCountry = data.country;
+
+        //     if (conCountry == 'KR') {      // CN
+        //         $("#slidercaptchaDiv").show();
+        //         captchaKind = 'slider';
+        //     } else {
+        //         $("#recaptchaDiv").show();
+        //         captchaKind = 're';
+        //     }
+        // });
+
+        $('#slidercaptcha').sliderCaptcha({
+            width: 310,
+            // height: 200,
+            sliderL: 42,
+            sliderR: 9,
+            offset: 5,
+            loadingText:'Loading...',
+            failedText:'Try It Again',
+            barText:'Slide the Puzzle',
+            repeatIcon:'fa fa-repeat',
+            // maxLoadCount: 3,
+            localImages: function() {// uses local images instead
+                return 'images/Pic' + Math.round(Math.random() * 4) +'.jpg';
+            },
+
+            onSuccess: function() {
+                // alert("onSuccess");
+                captchaFlg = true;
+                $("#slidercaptchaErr").remove();
+            },
+            onFail: function() {
+                // alert("onFail");
+                captchaFlg = false;
+            },
+            onRefresh: function() {
+                // alert("onRefresh");
+                captchaFlg = false;
+            }
+        });
+
         $("#createAccountFrom").validate({
             rules: {
                 memAccount: {
@@ -168,6 +255,10 @@
                     required: true,
                     rangelength: [8, 15],
                     checkPwd: true
+                }, memPwd_ok: {
+                    required: true,
+                    rangelength: [8, 15],
+                    equalTo: '#memPwd'
                 }, memEmail: {
                     required: true,
                     email: true
@@ -180,10 +271,15 @@
             messages: {
                 memAccount: {
                     required: "Enter account name.",
-                    checkAccount: "Unavailable."
+                    checkAccount: "Must be 12 characters (a-z / 1-5)."
                 }, memPwd: {
                     required: "Enter password.",
                     rangelength: $.validator.format("Password should be between {0}~{1} characters including letters and numbers."),
+                    checkPwd: "Password should be between 8~15 characters including letters and numbers."
+                }, memPwd_ok: {
+                    required: "Enter password.",
+                    rangelength: $.validator.format("Password should be between {0}~{1} characters including letters and numbers."),
+                    equalTo: "The passwords do not match. Please try again."
                 }, memEmail: {
                     required: "Enter your email address.",
                     email: "Invalid email address. Please try again."
@@ -205,7 +301,7 @@
                 $(el).parent().removeClass("error");
             }
         });
-
+        
     });
 
     // 계저 유효성 체크
@@ -282,6 +378,7 @@
         $("[name='memAccountMsg']").remove();
         $("#btnGenerateKey").attr("disabled", "disabled");
         $("#btnCreateAccount").attr("disabled", "disabled");
+        // $("#memAccountLen").text($("#memAccount").val().length);
         fnCheckAccount();
     }
 
@@ -292,6 +389,7 @@
             type: 'POST',
             dataType: 'json',
             success: function(data){
+                $("[name='keyGenErr']").remove();
                 if (data.result) {
                     $("#osbPublicKey").val(data.keyPair.publicKey);
                     $("#osbPrivateKey").val(data.keyPair.privateKey);
@@ -307,23 +405,42 @@
         });
     }
 
+    // var recaptchaCheck = false;
+    function recaptchaCallback() {
+        captchaFlg = true;
+        $("#recaptchaErr").remove();
+    }
+    
     function preCreateAccount() {
+        $("[name='keyGenErr']").remove();
+        if (!keyGenFlg) {
+            $("#btnGenerateKey").parent().append("<P class='error' name='keyGenErr'>Please generate a key pair.</p>");
+        }
+        
         if ($('#createAccountFrom').valid()) {
-            popupOpen(Popup_register_002);
+            if (!captchaFlg) {
+                if (captchaKind == 'slider') {
+                    $("#slidercaptchaErr").remove();
+                    $("#slidercaptchaDiv").append("<p class='captcha-error' id='slidercaptchaErr'>Slide the Puzzle</p>");
+                } else {
+                    $("#recaptchaErr").remove();
+                    $("#recaptchaDiv").append("<p class='captcha-error' id='recaptchaErr'>Check the box for reCAPTCHA.</p>");
+                }
+                return;
+            }
+            if (keyGenFlg) popupOpen(Popup_register_002);
         };
     }
 
     // 계정생성
     function createAccount() {
         if ($('#createAccountFrom').valid()) {
-            if (!keyGenFlg) {
-                alert("Not yet Generate a key pair");
-                return;
-            }
-
+            var captchaData = captchaKind == 're' ? "&recaptcha=" + grecaptcha.getResponse() : "";
+            var formData = $("#createAccountFrom").serialize() + "&captchakind=" + captchaKind + captchaData;
+            // formData.push({name: 'recaptcha', value: grecaptcha.getResponse()});
             $.ajax({
                 url: '/createAccountAjax',
-                data: $("#createAccountFrom").serialize(),
+                data: formData,
                 type: 'POST',
                 dataType: 'json',
                 success: function(data){
@@ -342,10 +459,9 @@
     }
 
     function fnBtnCopy() {
-        var text = 'account:' + $("#memAccount").val() + ' privateKey:' + $("#osbPrivateKey").val() + ' publicKey:' +$("#osbPublicKey").val();
+        var text = 'account name : ' + $("#memAccount").val() + '\nprivateKey : ' + $("#osbPrivateKey").val() + '\npublicKey : ' +$("#osbPublicKey").val();
         Clipboard.copy(text);
         popupOpen(Popup_copykeypair_001);
     }
 
-    
 </script>

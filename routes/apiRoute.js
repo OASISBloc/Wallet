@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var apiController = require('../controller/outerApiController');
 
-router.post('/getCurrencyBalance', apiController.getCurrencyBalance);
+router.post('/getMyTokenBalance', apiController.getMyTokenBalance);
 
 router.post('/getActions', apiController.getActions);
 
@@ -16,7 +16,7 @@ router.post('/login', apiController.login);
 
 router.post('/checkPrivateKey', apiController.checkPrivateKey);
 
-router.post('/getAccount', apiController.getAccount);
+router.post('/getAccountInfo', apiController.getAccountInfo);
 
 router.post('/transfer', apiController.transfer);
 
@@ -26,5 +26,7 @@ router.post('/forgotPasswordMail', apiController.forgotPasswordMail);
 router.post('/getLockupTransactions', apiController.getLockupTransactions);
 
 router.post('/claimUnlockup', apiController.claimUnlockup);
+
+router.post('/searchTokenList', apiController.searchTokenList);
 
 module.exports = router;

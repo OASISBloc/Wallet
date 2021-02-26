@@ -11,40 +11,41 @@
 <div class="container">
 	<!-- content -->
 	<section class="content">
-		<!-- login 이전 노출 -->
-		
-		<div class="user-info" style="display: none;" id="loginPre">
-			<div class="user">
-				<span>Sign in is required.</span>
+		<%if(account){%>
+		<div class="user-info">
+			<div class="user-cell">
+				<div class="user">
+					<span id="spSessionAccount"><%=account%></span>
+				</div>
 			</div>
+			<%if(symbol){%>
 			<dl class="osb">
-				<dt>Total OSB Balance :</dt>
-				<dd>-</dd>
+				<%if(symbol == 'OSB'){%>
+					<dt>OSB Balance :</dt>
+					<dd><span id="OSBAmount">-</span> OSB</dd>
+				<%}else if(symbol == 'SOSB'){%>
+						<dt>SOSB Balance :</dt>
+						<dd><span id="SOSBAmount">-</span> SOSB</dd>
+				<%}else if(symbol == 'CRA'){%>
+						<dt>CRA Balance :</dt>
+						<dd><span id="CRAAmount">-</span> CRA</dd>
+				<%}else{%>
+						<dt>Balance :</dt>
+						<dd><span>-</span></dd>
+				<%}%>
 			</dl>
+			<%}%>
 			<div class="btn-area">
-				<a href="/login" class="btn small sky">Sign in</a>
+				<a href="/tokens" class="btn small sky">Tokens</a>
 			</div>
 		</div>
-		
-		<!-- //login 이전 노출 -->
-
-		<!-- login 이후 노출 -->
-		
-		<div class="user-info" style="display: none;" id="loginAft">
-			<div class="user">
-				<span id="spSessionAccount"></span>
-			</div>
-			<dl class="osb">
-				<dt>Total OSB Balance :</dt>
-				<dd><span id="spBalance"></span> OSB</dd>
-			</dl>
-			<div class="btn-area">
-				<a href="/logout" class="btn small sky">Sign out</a>
-			</div>
-		</div>
-		
-		<!-- //login 이후 노출 -->
-
+		<form id="tokensForm">
+			<input type="hidden" id="delToken">
+			<input type="hidden" id="myOSBHidden">
+			<input type="hidden" id="mySOSBHidden">
+			<input type="hidden" id="myCRAHidden">
+		</form>
+		<%}%>
 
 		<%- body %>
 	</section>
@@ -58,6 +59,52 @@
 <!-- //Footer -->
 
 <%- script %>
-
+<script>
+	function getMyTokensBalance(){
+		$.ajax({
+			async: false,
+			cache: false,
+			url: '/getMyTokenBalanceAjax',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				var osbBalance = '0';
+				var sOsbBalance = '0';
+				var craBalance = '0';
+				try{
+					if(data.result) {
+						osbBalance = (Math.floor(data.osbBalance * 10000) /10000).toFixed(4);
+						sOsbBalance = (Math.floor(data.sOsbBalance * 10000) /10000).toFixed(4);
+						craBalance = (Math.floor(data.craBalance * 10000) /10000).toFixed(4);
+						osbBalance = numberWithCommas(osbBalance);
+						sOsbBalance = numberWithCommas(sOsbBalance);
+						craBalance = numberWithCommas(craBalance);
+						// console.log("osbBalance:" + osbBalance);
+						// console.log("osbBalance:" + sOsbBalance);
+						// console.log("osbBalance:" + craBalance);
+						$("#myOSBHidden").val(osbBalance);
+						$("#mySOSBHidden").val(sOsbBalance);
+						$("#myCRAHidden").val(craBalance);
+						$("#myOSBAmount").text(osbBalance);
+						$("#OSBAmount").text(osbBalance);
+						$("#SOSBAmount").text(sOsbBalance);
+						$("#CRAAmount").text(craBalance);
+					}else{
+						$("#OSBAmount").text(osbBalance);
+						$("#SOSBAmount").text(sOsbBalance);
+						$("#CRAAmount").text(craBalance);
+					}
+				}catch (e) {
+					console.log("displayMyTokens error" + e);
+				}
+			}
+			, error: function(request, status, error) {
+				console.log("error: " + error);
+				alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+				alert('Error occurred.');
+			}
+		});
+	}
+</script>
 </body>
 </html>

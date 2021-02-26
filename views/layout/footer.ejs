@@ -2,7 +2,57 @@
 	<div class="footer-in">
 		
 		<p class="copyright">© 2019 Foundation OASIS LTD. All Rights Reserved. </p>
+		<div class="btn-terms">
+			<!--<a href="/termNpolicy?termType=term" id="term" style="display: none;">Term of service</a>-->
+			<a href="/termNpolicy?termType=privacy" id="privacy" style="display: none;">Privacy policy</a>
+		</div>
 		<a href="mailto:Support@oasisbloc.io" class="btn-mail">Support@oasisbloc.io</a>
 
 	</div>
+	<%	
+		// 공통 footer로 약관 관련 화면 이동시 type 처리
+		var termsType = '';
+		try {
+			termsType = termType ? termType : '';
+		} catch(err) {
+
+		}
+	%>
 </footer>
+
+<script>
+	$(function() {
+		$.ajax({
+			url: '/getTermNpolicyAjax',
+			type: 'POST',
+			dataType: 'json',
+			success: function(datas) {
+				if (datas.result) {
+					datas.termYN == 'Y' ? $("#term").show() : $("#term").hide();
+					datas.privacyYN == 'Y' ? $("#privacy").show() : $("#privacy").hide();
+
+					var termsType = '<%=termsType %>';
+					if (termsType != '') {
+						$("#ulVer").empty();
+						var list = datas.datas;
+						var index = 0, lastIdx = 0;
+						for (var i = 0; i < list.length; i++) {
+							if (termsType == list[i].termsTypeName) {
+								$("#ulVer").append("<li><a href=\"javascript:;\" onclick=\"clickTerms(" + list[i].boardId + ");\">" + list[i].createDate + ' (' + list[i].termsVersion + ')' + "</a></li>");
+								if (index == 0) {
+									lastIdx = i;
+									//$("#showVer").text(list[i].createDate + ' (' + list[i].termsVersion + ')');
+								}
+								index++;
+							}
+						}
+						clickTerms(list[lastIdx].boardId);
+					}
+				}
+			}
+			, error: function(error) {
+				alert('Error occurred.');
+			}
+		});
+	});
+</script>

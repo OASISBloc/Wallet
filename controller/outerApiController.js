@@ -1,12 +1,19 @@
+const { Api, JsonRpc, RpcError } = require('eosjs');
+const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');      // development only
+const { TextEncoder, TextDecoder } = require('util');
 const joinModel = require('../model/joinModel');
 const loginModel = require('../model/loginModel');
+const tokenModel = require("../model/tokenModel");
 const ecc = require('eosjs-ecc');
 const Eos = require('eosjs');
+const fetch = require('node-fetch');      
 const cryptoUtil = require('../util/crypto');
 const cryptoRandomString = require('crypto-random-string');
 const commonController = require('../controller/commonController');
 var async = require('async');
 var dateFormat = require('dateformat');
+const fs = require('fs');
+const cryptoJS = require("crypto-js");
 
 var outerApiController = {
     /**
@@ -32,9 +39,35 @@ var outerApiController = {
             res.json({result: false, message: 'enter account name.', data: {}});
             return;
         }
-        outerApiController.getAccount(req, res);
+        outerApiController.getAccountInfo(req, res);
     },
 
+    // contract 계정 조회
+    getAccountInfo: function(req, res){
+        try{
+            var locConfig = osbConfig;
+            locConfig.keyProvider = config.osbMoPrivateKey;
+
+            var rpc = new JsonRpc(locConfig.httpEndpoint, { fetch });
+//          const eos = Eos(locConfig);
+            var account = req.body.account ? req.body.account : '';
+            (async () => {
+                var result = null;
+                if(account !==''){
+                    try{
+                        result = await rpc.get_account(account);
+                        if(result){
+                            res.json({result: true, data: result});
+                        }
+                    }catch(err){
+                        res.json({result: false});
+                    }
+                }
+            })();
+        }catch (e) {
+            console.log("getAccount error:" + e);
+        }
+    },
     // contract 계정 조회
     getAccount: function(req, res){
         var Account = req.body.account ? req.body.account : '';
@@ -88,103 +121,292 @@ var outerApiController = {
         })();
     },
 
+
     // 회원등록 OK
+    // createAccount: function(req, res) {
+    //     var params = req.body;
+    //     try {
+    //         // check param
+    //         params.memAccount = params.memAccount ? params.memAccount : '';
+    //         var regAcc = /^[a-z1-5+]{12}$/;
+    //         if (!regAcc.test(params.memAccount)) {
+    //             res.json({result: false, message: 'Invalid account.'});
+    //             return;
+    //         }
+    //         params.memPwd = params.memPwd ? params.memPwd : '';
+    //         var regPwd = /^.*(?=.*[0-9])(?=.*[a-zA-Z]).*$/;
+    //         if (!regPwd.test(params.memPwd)) {
+    //             res.json({result: false, message: 'Invalid password.'});
+    //             return;
+    //         }
+    //         params.osbPublicKey = params.osbPublicKey ? params.osbPublicKey : '';
+    //         if (params.osbPublicKey == '') {
+    //             res.json({result: false, message: 'Invalid publickey'});
+    //             return;
+    //         }
+    //         params.memEmail = params.memEmail ? params.memEmail : '';
+    //         var regEmail = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
+    //         if (!regEmail.test(params.memEmail)) {
+    //             res.json({result: false, message: 'Invalid email'});
+    //             return;
+    //         }
+    //         params.agree_1 = params.agree_1 ? params.agree_1 : 'N';
+    //         params.agree_2 = params.agree_2 ? params.agree_2 : 'N';
+    //         if (params.agree_1 != 'Y' || params.agree_2 != 'Y') {
+    //             res.json({result: false, message: 'Invalid agree'});
+    //             return;
+    //         }
+
+    //         params.memPwd = cryptoUtil.sha256Crypto(params.memPwd);
+            
+    //         // EOS 계정 등록 
+    //         var eosjsParamPubKey = 'EOS' + params.osbPublicKey.substring(3, params.osbPublicKey.length);
+            
+    //         var locConfig = osbConfig;
+    //         locConfig.keyProvider = config.osbMoPrivateKey;
+
+    //         var eos = Eos(locConfig);
+            
+    //         eos.transaction(tr => {
+    //             tr.newaccount({
+    //                 creator: config.osbMoAccount,
+    //                 name: params.memAccount,
+    //                 owner: eosjsParamPubKey,
+    //                 active: eosjsParamPubKey
+    //             });
+    //             /** RAM 대신 사주기 */
+    //             tr.buyrambytes({
+    //                 payer : config.osbMoAccount,
+    //                 receiver : params.memAccount,
+    //                 bytes : 3400//4096
+    //             });
+    //             /** CPU, NET 자원 스테이킹 위임 */
+    //             tr.delegatebw({
+    //                 from : config.osbMoAccount,
+    //                 receiver : params.memAccount,
+    //                 stake_cpu_quantity : '0.0020 OSB',
+    //                 stake_net_quantity : '0.0020 OSB',
+    //                 transfer : 0 // 0 빌려주는 거 1 주는거
+    //             });
+    //         }).then(result => {
+
+    //             (async () => {
+    //                 var result = null;
+    //                 try {
+    //                     result = await eos.getAccountInfo(params.memAccount);
+    //                     if(result) {
+    //                         // account / publickey 등록
+    //                         joinModel.createAccount(params, function(err, crateAccountResult) {
+    //                             if (err) {
+    //                                 res.json({result: false, message: 'create account failed.'});
+    //                             } else {
+    //                                 // 메일 인증번호 생성 및 DB등록
+    //                                 var certificationKey = cryptoRandomString(16);
+    //                                 var mailParmas = {
+    //                                     'account' : params.memAccount
+    //                                     , 'retryKey' : certificationKey
+    //                                     , 'homeUrl' : config.homeUrl
+    //                                     , userEmail : params.memEmail
+    //                                     , emailSubject : 'Account creation is complete!'
+    //                                     , emailFormNm : 'mailCreateAccount.html'
+    //                                     , explorerUrl : config.explorerUrl
+    //                                 }
+    //                                 // 공통 인증관련 메일 발송 처리
+    //                                 commonController.awsMail(mailParmas);
+        
+    //                                 res.json({result: true, message: 'create account OK!!'});
+    //                             }
+    //                         });
+    //                     }
+    //                 } catch(err) {
+    //                     eos.transaction(tr => {
+    //                         tr.newaccount({
+    //                             creator: config.osbMoAccount,
+    //                             name: params.memAccount,
+    //                             owner: eosjsParamPubKey,
+    //                             active: eosjsParamPubKey
+    //                         });
+    //                         /** RAM 대신 사주기 */
+    //                         tr.buyrambytes({
+    //                             payer : config.osbMoAccount,
+    //                             receiver : params.memAccount,
+    //                             bytes : 3400//4096
+    //                         });
+    //                         /** CPU, NET 자원 스테이킹 위임 */
+    //                         tr.delegatebw({
+    //                             from : config.osbMoAccount,
+    //                             receiver : params.memAccount,
+    //                             stake_cpu_quantity : '0.0020 OSB',
+    //                             stake_net_quantity : '0.0020 OSB',
+    //                             transfer : 0 // 0 빌려주는 거 1 주는거
+    //                         });
+    //                     }).then(result => {
+    //                         // account / publickey 등록
+    //                         joinModel.createAccount(params, function(err, crateAccountResult) {
+    //                             if (err) {
+    //                                 res.json({result: false, message: 'create account failed.'});
+    //                             } else {
+    //                                 // 메일 인증번호 생성 및 DB등록
+    //                                 var certificationKey = cryptoRandomString(16);
+    //                                 var mailParmas = {
+    //                                     'account' : params.memAccount
+    //                                     , 'retryKey' : certificationKey
+    //                                     , 'homeUrl' : config.homeUrl
+    //                                     , userEmail : params.memEmail
+    //                                     , emailSubject : 'Account creation is complete!'
+    //                                     , emailFormNm : 'mailCreateAccount.html'
+    //                                     , explorerUrl : config.explorerUrl
+    //                                 }
+    //                                 // 공통 인증관련 메일 발송 처리
+    //                                 commonController.awsMail(mailParmas);
+        
+    //                                 res.json({result: true, message: 'create account OK!!'});
+    //                             }
+    //                         });
+    //                     }).catch((error) => {
+    //                         var jsonErr = JSON.parse(error)
+    //                         res.json({result: false, message: jsonErr.error.what});
+    //                     });
+    //                 }
+    //             })();
+                
+    //         }).catch((error) => {
+    //             var jsonErr = JSON.parse(error)
+    //             res.json({result: false, message: jsonErr.error.what});
+    //         });
+    //     } catch (error) {
+    //         res.json({result: false, message: 'error occurred'});
+    //     }
+    // },
+
     createAccount: function(req, res) {
         var params = req.body;
-        try {
-            // check param
-            params.memAccount = params.memAccount ? params.memAccount : '';
-            var regAcc = /^[a-z1-5+]{12}$/;
-            if (!regAcc.test(params.memAccount)) {
-                res.json({result: false, message: 'Invalid account.'});
-                return;
-            }
-            params.memPwd = params.memPwd ? params.memPwd : '';
-            var regPwd = /^.*(?=.*[0-9])(?=.*[a-zA-Z]).*$/;
-            if (!regPwd.test(params.memPwd)) {
-                res.json({result: false, message: 'Invalid password.'});
-                return;
-            }
-            params.osbPublicKey = params.osbPublicKey ? params.osbPublicKey : '';
-            if (params.osbPublicKey == '') {
-                res.json({result: false, message: 'Invalid publickey'});
-                return;
-            }
-            params.memEmail = params.memEmail ? params.memEmail : '';
-            var regEmail = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
-            if (!regEmail.test(params.memEmail)) {
-                res.json({result: false, message: 'Invalid email'});
-                return;
-            }
-            params.agree_1 = params.agree_1 ? params.agree_1 : 'N';
-            params.agree_2 = params.agree_2 ? params.agree_2 : 'N';
-            if (params.agree_1 != 'Y' || params.agree_2 != 'Y') {
-                res.json({result: false, message: 'Invalid agree'});
-                return;
-            }
+        // check param
+        params.memAccount = params.memAccount ? params.memAccount : '';
+        params.agree_1 = params.agree_1 == 'on' ? 'Y' : 'N';
+        params.agree_2 = params.agree_2 == 'on' ? 'Y' : 'N';
+        params.memPwd = cryptoUtil.sha256Crypto(params.memPwd);
 
-            params.memPwd = cryptoUtil.sha256Crypto(params.memPwd);
-            
-            // EOS 계정 등록 
-            var eosjsParamPubKey = 'EOS' + params.osbPublicKey.substring(3, params.osbPublicKey.length);
-            
-            var locConfig = osbConfig;
-            locConfig.keyProvider = config.osbMoPrivateKey;
+        var locConfig = osbConfig;
+        locConfig.keyProvider = config.osbMoPrivateKey;
+        var rpc = new JsonRpc(locConfig.httpEndpoint, { fetch });
+        var signatureProvider = new JsSignatureProvider([config.osbMoPrivateKey]);
+        var api = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
 
-            var eos = Eos(locConfig);
-            eos.transaction(tr => {
-                tr.newaccount({
-                    creator: config.osbMoAccount,
-                    name: params.memAccount,
-                    owner: eosjsParamPubKey,
-                    active: eosjsParamPubKey
-                });
-                /** RAM 대신 사주기 */
-                tr.buyrambytes({
-                    payer : config.osbMoAccount,
-                    receiver : params.memAccount,
-                    bytes : 4096
-                });
-                /** CPU, NET 자원 스테이킹 위임 */
-                tr.delegatebw({
-                    from : config.osbMoAccount,
-                    receiver : params.memAccount,
-                    stake_cpu_quantity : '0.0200 OSB',
-                    stake_net_quantity : '0.0200 OSB',
-                    transfer : 0 // 0 빌려주는 거 1 주는거
-                });
-            }).then(result => {
-                // account / publickey 등록
-                joinModel.createAccount(params, function(err, crateAccountResult) {
-                    if (err) {
-                        res.json({result: false, message: 'create account failed.'});
-                    } else {
-                        // 메일 인증번호 생성 및 DB등록
-                        var certificationKey = cryptoRandomString(16);
-                        var mailParmas = {
-                            'account' : params.memAccount
-                            , 'retryKey' : certificationKey
-                            , 'homeUrl' : config.homeUrl
-                            , userEmail : params.memEmail
-                            , emailSubject : 'Account creation is complete!'
-                            , emailFormNm : 'mailCreateAccount.html'
-                            , explorerUrl : config.explorerUrl
+        console.log("params.osbPublicKey:" + params.osbPublicKey);
+        console.log("config.osbMoAccount:" + config.osbMoAccount);
+        try{
+            (async () => {
+                await api.transact({
+                    actions: [{
+                        account: 'eosio',
+                        name: 'newaccount',
+                        authorization: [{
+                            actor: config.osbMoAccount,
+                            permission: 'active',
+                        }],
+                        data: {
+                            creator: config.osbMoAccount,
+                            name: params.memAccount,
+                            owner: {
+                                threshold: 1,
+                                keys: [{
+                                    key: params.osbPublicKey,
+                                    weight: 1
+                                }],
+                                accounts: [],
+                                waits: []
+                            },
+                            active: {
+                                threshold: 1,
+                                keys: [{
+                                    key: params.osbPublicKey,
+                                    weight: 1
+                                }],
+                                accounts: [],
+                                waits: []
+                            },
+                        },
+                    },
+                        {
+                            account: 'eosio',
+                            name: 'buyrambytes',
+                            authorization: [{
+                                actor: config.osbMoAccount,
+                                permission: 'active',
+                            }],
+                            data: {
+                                payer: config.osbMoAccount,
+                                receiver: params.memAccount,
+                                bytes: 4096,
+                            },
+                        },
+                        {
+                            account: 'eosio',
+                            name: 'delegatebw',
+                            authorization: [{
+                                actor: config.osbMoAccount,
+                                permission: 'active',
+                            }],
+                            data: {
+                                from: config.osbMoAccount,
+                                receiver: params.memAccount,
+                                stake_net_quantity: '0.0020 OSB',
+                                stake_cpu_quantity: '0.0020 OSB',
+                                transfer: false,
+                            }
+                        }]
+                }, {
+                    blocksBehind: 3,
+                    expireSeconds: 30,
+                }).then(result => {
+                    (async () => {
+                        var result = null;
+
+                        // Added by wschoi
+                        // await sleep(2000);
+
+                        try {
+                            result = await rpc.get_account(params.memAccount);
+                            console.log("result=>" + result);
+                            if(result) {
+                                // account / publickey 등록
+                                joinModel.createAccount(params, function(err, crateAccountResult) {
+                                    if (err) {
+                                        console.log("error=>" + err);
+                                        res.json({result: false, message: 'create account failed.'});
+                                    } else {
+                                        // 메일 인증번호 생성 및 DB등록
+                                        var certificationKey = cryptoRandomString(16);
+                                        var mailParmas = {
+                                            'account' : params.memAccount
+                                            , 'retryKey' : certificationKey
+                                            , 'homeUrl' : config.homeUrl
+                                            , userEmail : params.memEmail
+                                            , emailSubject : 'Account creation is complete!'
+                                            , emailFormNm : 'mailCreateAccount.html'
+                                            , explorerUrl : config.explorerUrl
+                                        }
+                                        // 공통 인증관련 메일 발송 처리
+                                        commonController.awsMail(mailParmas);
+                                        console.log("after awsmail send===");
+                                        res.json({result: true, rtnDatas: params, message: 'create account OK!!'});
+                                    }
+                                });
+                            }
+                        } catch(err) {
+
+                            console.log("err1===" +err);
+                            res.json({result: false, message: 'create account failed.'});
+
                         }
-                        // 공통 인증관련 메일 발송 처리
-                        commonController.awsMail(mailParmas);
-
-                        res.json({result: true, message: 'create account OK!!'});
-                    }
+                    })();
                 });
-            }).catch((error) => {
-                var jsonErr = JSON.parse(error)
-                res.json({result: false, message: jsonErr.error.what});
-            });
-        } catch (error) {
-            res.json({result: false, message: 'error occurred'});
+            })();
+        }catch(e){
+            console.log("newaccount error:" + e);
         }
     },
-
     /**
      * 로그인
      */
@@ -261,276 +483,369 @@ var outerApiController = {
 
     /** 전송 */
     // 전송
-    transfer: function(req, res) {
-        var Account = req.body.account ?  req.body.account : '';
-        var sendTo = req.body.sendTo ? req.body.sendTo : '';
-        var amount = req.body.amount ? req.body.amount : '0';
-        var memo = req.body.memo ? req.body.memo : '';
-        var prvkey = req.body.prvkey ? req.body.prvkey : '';
-        var chkPwdYn = req.body.chkPwdYn ? req.body.chkPwdYn : 'Y';
-        var pwd = req.body.password ? req.body.password : '';
+    transfer: function(req, res){
+        try{
+            var Account = req.body.account ?  req.body.account : '';
+            var sendTo = req.body.sendTo ? req.body.sendTo : '';
+            var amount = req.body.amount ? req.body.amount : '';
+            var memo = req.body.memo ? req.body.memo : '';
+            var key = req.body.prvkey ? req.body.prvkey : '';
+            //var key = "U2FsdGVkX1/DjjMDHuufsBJ71l56c3BkXbRlQrhYR3rPG90NfCx0C69mhq+/l4ipCPPHiOy95lyThvMKJKhytgiikWppluSpv6usgoR8eyQ=";
+            var symbol = req.body.symbol ? req.body.symbol : '';
+            console.log("sendTo:" + sendTo);
+            console.log("amount:" + amount);
+            console.log("memo:" + memo);
+            console.log("key:" + key);
+            console.log("symbol:" + symbol);
 
-        // check param
-        if (Account == '') {
-            res.json({result: false, message: 'Invalid account.'});
-            return;
-        }
-        if (sendTo == '') {
-            res.json({result: false, message: 'Invalid receive account.'});
-            return;
-        }
-        if (Number(amount) < 0.001) {
-            res.json({result: false, message: 'Invalid amount.'});
-            return;
-        }
-        if (memo.length > 256) {
-            res.json({result: false, message: 'Invalid memo.(too long)'});
-            return;
-        }
-        if (prvkey == '') {
-            res.json({result: false, message: 'Invalid privatekey.'});
-            return;
-        }
-        if (chkPwdYn == 'Y') {
-            var chkParam = {};
-            pwd = cryptoUtil.sha256Crypto(pwd);
-            chkParam.memAccount = Account;
-            chkParam.memPwd = pwd;
+            var returnData = {
+                result: ''
+            };
 
-            loginModel.loginCheck(chkParam, function(err, chkResult) {
-                if (err) {
-                    res.json({result: false, message: 'Please check the information you entered.'});
-                } else {
-                    if (chkResult.length == 0) {
-                        res.json({result: false, message: 'Invalid password.'});
-                    } else {
-                        outerApiController.subTransfer(req, res, Account, sendTo, amount, memo, prvkey);
-                    }
-                }
+            // var contents = fs.readFileSync('/Users/dc/.tmp/pastday/mealworm/loveheart', 'utf8');
+            // // var contents = fs.readFileSync('/home/dc-server1/.tmp/pastday/mealworm/loveheart', 'utf8');
+            // var iv = contents
+            
+            // iv = Buffer.from(iv, 'base64').toString();
+            // console.log('iv' + iv);
+            // // iv = cryptoJS.enc.Base64.parse(iv);
+
+            // // console.log('key' + key);
+            // var prvkey = cryptoJS.AES.decrypt(key, cryptoJS.enc.Base64.parse(iv), {
+            //     mode: cryptoJS.mode.CBC,
+            //     padding: cryptoJS.pad.Pkcs7
+            // });
+            
+            var tmp = key.split("*");
+            
+            var salt = cryptoJS.enc.Utf8.parse("20140401");
+            // var password = fs.readFileSync('/Users/dc/.tmp/pastday/mealworm/loveheart', 'utf8').toString();
+            var password = fs.readFileSync('/home/dc-server1/.tmp/pastday/mealworm/loveheart', 'utf8').toString();
+            password = password.replace('\n', '');
+            var keyBits = cryptoJS.PBKDF2(password, salt, {
+                hasher: cryptoJS.algo.SHA1,
+                keySize: 8,
+                iterations: 2048
             });
-        } else {
-            outerApiController.subTransfer(req, res, Account, sendTo, amount, memo, prvkey);
-        }
-    },
 
-    subTransfer: function(req, res, Account, sendTo, amount, memo, prvkey) {
-        var returnData = {
-            result: '',
-            message: ''
-        };
-        (async () => {
+            var iv = cryptoJS.enc.Base64.parse(tmp[0]); // password를 encrypt secret
+            var decrypted = cryptoJS.AES.decrypt(tmp[1], keyBits, {
+                iv: iv,
+                padding: cryptoJS.pad.Pkcs7,
+                mode: cryptoJS.mode.CBC
+            });
+
+            var prvkey = decrypted.toString(cryptoJS.enc.Utf8);
+            console.log("prvkey decrypt = " + prvkey);
+
             var locConfig = osbConfig;
-            locConfig.keyProvider = prvkey;
-            const eos = Eos(locConfig);
-        
-            var result = null;
-            try {
-                var amtArray = amount.split('.');
-                var intAmt = amtArray[0].replace(/[^\d]+/g, '');
-                var dotAmt = amtArray[1] ? amtArray[1].padEnd(4, '0') : '0000';
-                amount = intAmt + "." + dotAmt;
+            var rpc = new JsonRpc(locConfig.httpEndpoint, { fetch });
+            var signatureProvider = new JsSignatureProvider([prvkey]);
+            var api = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
 
-                result = await eos.transaction({
-                    actions: [{
-                        account: config.osbTransfer,
-                        name: 'transfer',
-                        authorization:[{
-                            actor: Account,
-                            permission: 'active',
-                        }],
-                        data: {
-                            from: Account,
-                            to: sendTo,
-                            quantity: amount + ' OSB',
-                            memo: memo
-                        },
-                    }]
-                }, {
-                    blocksBehind: 3,
-                    expireInSeconds: 30,
-                });
-                if (result) {
-                    returnData.result = true;
-                    returnData.message = "transfer success";
-                } else {
+            (async () => {
+                if(sendTo !== '' && amount !== '' && prvkey !== '' && Account !== ''){
+                    try{
+                        var amtArray = amount.split('.');
+                        var intAmt = amtArray[0].replace(/[^\d]+/g, '');
+                        var dotAmt = amtArray[1] ? amtArray[1].padEnd(4, '0') : '0000';
+                        amount = intAmt + "." + dotAmt;
+                        amount = amount + " " + symbol;
+                        const result = await api.transact({
+                            actions: [{
+                                account: config.osbTransfer,
+                                name: 'transfer',
+                                authorization: [{
+                                    actor: Account,
+                                    permission: 'active',
+                                }],
+                                data: {
+                                    from: Account,
+                                    to: sendTo,
+                                    quantity: amount,
+                                    memo: memo,
+                                },
+                            }]
+                        }, {
+                            blocksBehind: 3,
+                            expireSeconds: 30,
+                        });
+                        //console.dir(result);
+                        if(result){
+                            returnData.result = true;
+                            console.dir(result);
+                        }else{
+                            returnData.result = false;
+                        }
+                    }catch(err){
+                        console.log("transfer error:" + err);
+                        returnData.result = false;
+                    }
+                }else{
                     returnData.result = false;
-                    returnData.message = "transfer Failed";
                 }
-            } catch (err) {
-                returnData.result = false;
-                returnData.message = "Please check the information you entered.";
-            }
-            res.json(returnData);
-         })();
+                //console.log(result);
+                res.json(returnData);
+            })();
+        }catch (e) {
+            console.log("transfer error:" + e);
+        }
     },
 
     /** 전송 내역 */
-    // 잔액 조회 getCurrencyBalance
-    getCurrencyBalance: function(req, res) {
-        var Account = req.body.account ?  req.body.account : '';
-        // check param
-        if (Account == '') {
-            res.json({result: false, message: 'Invalid account.', data: '0'});
-            return;
-        }
-
+    // 잔액 조회 getMyTokenBalance
+    getMyTokenBalance: function(req, res) {
+        var Account = req.body.account ? req.body.account : '';
         var returnData = {
             result: '',
             message: '',
-            data: '0'
+            data: '',
+            sessionAccount: Account
         };
-
-        const eos = Eos(osbConfig);
-
+        
+        var locConfig = osbConfig;
+        var rpc = new JsonRpc(locConfig.httpEndpoint, { fetch });
         (async () => {
             var result = null;
-            try {
-                result = await eos.getCurrencyBalance(config.osbTransfer, Account);
-                if (result) {
-                    if (result.length > 0) {
-                        var balance = result[0];
-                        balance = balance.replace('OSB','').replace(' ','');
-                        returnData.result = true;
-                        returnData.message = 'OK!!';
-                        returnData.data = balance;
-                        res.json(returnData);
-                    } else {
-                        returnData.result = true;
-                        returnData.message = 'no balance';
-                        returnData.data = '0';
+            if(Account !==''){
+                try{
+                    result = await rpc.get_table_rows({
+                        json: true,               // Get the response as json
+                        code: 'osbio.token',      // Contract that we target
+                        scope: Account,         // Account that owns the data
+                        table: 'accounts',        // Table name
+                        limit: 10,                // Maximum number of rows that we want to get
+                        reverse: false,           // Optional: Get reversed data
+                        show_payer: false          // Optional: Show ram payer
+                    });
+                    var balanceData = {
+                        osbBalance: 0.0000,
+                        sOsbBalance: 0.0000,
+                        craBalance: 0.0000
+                    };
+                    if(result){
+                        var osbBalance = 0.0000;
+                        var sOsbBalance = 0.0000;
+                        var craBalance = 0.0000;
+                        if(result.rows.length == 0){
+                            returnData.result = true;
+                            returnData.data = balanceData;
+                            returnData.message = "잔액조회 데이터가 없습니다.";
+                            res.json(returnData);
+                        }else{
+                            result.rows.forEach(function(el, i){
+                                var balances = [];
+                                balances = el.balance.split(' ');
+                                console.log("balances============" + balances[0] + balances[1]);
+                                if(balances[1] == 'OSB'){
+                                    osbBalance = el.balance;
+                                    balanceData.osbBalance = osbBalance.replace('OSB','').replace(' ','');
+                                }else if(balances[1] == 'SOSB'){
+                                    sOsbBalance = el.balance;
+                                    balanceData.sOsbBalance = sOsbBalance.replace('SOSB','').replace(' ','');
+                                }else if(balances[1] == 'CRA'){
+                                    craBalance = el.balance;
+                                    balanceData.craBalance = craBalance.replace('CRA','').replace(' ','');
+                                }
+                            })
+                            returnData.result = true;
+                            returnData.data = balanceData;
+                            returnData.message = "잔액조회가 정상적으로 실행되었습니다.";
+                            res.json(returnData);
+                        }
+                        console.log("osbBalance= " + balanceData.osbBalance);
+                        console.log("sObBalance= " + balanceData.sOsbBalance);
+                        console.log("craBalance= " + balanceData.craBalance);
+                    }else{
+                        returnData.result = false;
+                        returnData.message = "잔액조회에 실패하였습니다.";
                         res.json(returnData);
                     }
-                } else {
+                }catch(err){
+                    console.log("err in cont ==>" + err);
                     returnData.result = false;
-                    returnData.message = 'no data.';
-                    returnData.data = 0;
+                    returnData.message = "잔액조회에 실패하였습니다.";
                     res.json(returnData);
                 }
-            } catch (err) {
+            }else{
                 returnData.result = false;
-                returnData.message = 'Error occurred.';
-                returnData.data = 0;
+                returnData.message = "잔액조회에 실패하였습니다.";
                 res.json(returnData);
             }
         })();
     },
     // 내역
     getActions: function(req, res) {
-        const eos = Eos(osbConfig);
-        var Account = req.body.account ?  req.body.account : '';
-        var timezoneoffset = req.body.timezoneoffset ? req.body.timezoneoffset : '';
+        try{
+            var locConfig = osbConfig;
+            var rpc = new JsonRpc(locConfig.httpEndpoint, { fetch });
+            var Account = req.body.account ?  req.body.account : '';
+            var timezoneoffset = req.body.timezoneoffset;
+            var pos = req.body.pos ? req.body.pos : 0;
+            console.log("received pos:" + pos);
+            var symbol = req.body.symbol ? req.body.symbol : '';
 
-        // check param
-        if (Account == '') {
-            res.json({result: false, message: 'Invalid account.', data: []});
-            return;
-        }
-        if (timezoneoffset == '') {
-            res.json({result: false, message: 'Invalid timezoneoffset.', data: []});
-            return;
-        }
+            var returnData = {
+                result: '',
+                data: '',
+                pos: ''
+            };
 
-        var returnData = {
-            result: '',
-            message: '',
-            data: []
-        };
+            (async () => {
+                var result = null;
+                var preResult = null;
+                if(Account !==''){
+                    try{
+                        var transactions = [];
+                        var arrTran = [];
+                        preResult = await rpc.history_get_actions(Account, -1, -1);
+                        if (preResult.actions.length == 0 ) { 
+                            returnData.result = true;
+                            returnData.data = "no data"
+                            returnData.pos = pos;
+                            res.json(returnData);
+                            return;
+                        }
+                        var maxNum = preResult.actions[0].account_action_seq;
+                        pos = (pos == 0) ? maxNum : pos;
+                        var transactions = [];
+                        var arrTran = [];
+                        //pos = maxNum + 1;
+                        var limit = 0;
+                        result = await rpc.history_get_actions(Account, pos, -100);
+                        if(result){
+                            //console.log("result.actions.length" + result.actions.length);
+                            if(result.actions.length >0) {
+                                result.actions.forEach(function(el, i){
+                                    //console.log("account_action_seq==>" + el.account_action_seq);
+                                    var jStr = JSON.stringify(result.actions);
+                                    var trx_id = el.action_trace.trx_id;
+                                    var block_num = el.action_trace.block_num;
+                                    var block_time = el.action_trace.block_time;
 
-        (async () => {
-            var result = null;
-            try {
-                var transactions = [];
-                var arrTran = [];
-                result = await eos.getActions(Account, -1, -2000);
-                if (result) {
-                    if (result.actions.length > 0) {
-                        var actions = result.actions;
-                        actions.forEach(function (el, i) {
-
-                            var trx_id = el.action_trace.trx_id;
-                            var block_num = el.action_trace.block_num;
-                            var block_time = el.action_trace.block_time;
-                            var action_trace = el.action_trace.act;
-                            if (action_trace.name.indexOf('claim') < 0) {
-                                var nodeDate = new Date(block_time);
-                                nodeDate.setHours(nodeDate.getHours() + parseInt(timezoneoffset));
-                                var timezonedate = dateFormat(nodeDate, "mmm-dd-yyyy, h:MM:ss TT");                        
-                                var data = action_trace.data;
-                                var from = data.from;
-                                var to = data.to;
-                                var memo = data.memo;
-                                // var quantity = data.quantity.replace('OSB','').replace(' ','');;
-
-                                var quantity = "";
-                                switch(action_trace.name) {
-                                    case 'transfer' : 
-                                        quantity = data.quantity.replace('OSB','').replace(' ','');
-                                        break;
-                                    case 'buyram' :
-                                        quantity = data.quant.replace('OSB','').replace(' ','');
-                                        break;
-                                    case 'delegatebw' :
-                                        quantity = data.stake_cpu_quantity.replace('OSB','').replace(' ','');
-                                        // quantity += ", stake_cpu_quantity : " + data.stake_cpu_quantity.replace('OSB','').replace(' ','');
-                                        break;
-                                    default : 
-                                        quantity = "0";
-                                        break;
-                                }
-
-                                var transfer_type = "Sent";
-                                if (to === Account) {
-                                    if (action_trace.name == 'transfer') {
-                                        transfer_type = "Received";
-                                    } else {
-                                        transfer_type = action_trace.name;
+                                    var action_trace = el.action_trace.act;
+                                    var symbols = [];
+                                    if (action_trace.data.quantity != null) {
+                                        symbols = action_trace.data.quantity.split(' ');
                                     }
-                                }
+                                    var resultSymbol = symbols[1];
+                                    
+                                    if (el.action_trace.act.name == 'transfer' && resultSymbol == symbol && symbol != '') {
+                                        console.log("action_trace.name:" + action_trace.name);
+                                        console.log("resultSymbol=" + resultSymbol);
+                                        console.log("symbol=" + symbol);
+                                        block_time = dateFormat(block_time, "mmm-dd-yyyy, hh:MM:ss TT Z");
+                                        var nodeDate = new Date(block_time);
+                                        nodeDate.setHours(nodeDate.getHours() + parseInt(timezoneoffset));
+                                        var timezonedate = dateFormat(nodeDate, "mmm-dd-yyyy, h:MM:ss TT");
 
-                                var tran_info = [
-                                    trx_id,
-                                    block_num,
-                                    timezonedate,
-                                    from,
-                                    to,
-                                    memo,
-                                    quantity,
-                                    transfer_type
-                                ];
-                                
-                                if (!arrTran.includes(trx_id)) {
-                                    transactions.push(tran_info);
-                                    arrTran.push(trx_id);
-                                }
-                            } else {
-                                console.dir(el);
+                                        var data = action_trace.data;
+                                        // from, to, memo, quantity
+                                        var from = data.from;
+                                        var to = data.to;
+                                        var memo = data.memo;
+                                        var quantity = data.quantity.replace(resultSymbol, '').replace(' ', '');
+                                        var transfer_type = "Sent";
+                                        if (to === Account) {
+                                            if (action_trace.name == 'transfer') {
+                                                transfer_type = "Received";
+                                            } else {
+                                                transfer_type = action_trace.name;
+                                            }
+                                        }
+
+                                        var tran_info = [
+                                            trx_id,
+                                            block_num,
+                                            timezonedate,
+                                            from,
+                                            to,
+                                            memo,
+                                            quantity,
+                                            transfer_type,
+                                            symbol,
+                                        ];
+
+                                        if (!arrTran.includes(trx_id)) {
+                                            transactions.push(tran_info);
+                                            arrTran.push(trx_id);
+                                            limit++;
+                                        }
+                                    } else if (el.action_trace.act.name == 'transfer' && symbol == ''){
+                                        console.log("action_trace.name:" + action_trace.name);
+                                        console.log("resultSymbol=" + resultSymbol);
+                                        console.log("symbol=" + symbol);
+                                        block_time = dateFormat(block_time, "mmm-dd-yyyy, hh:MM:ss TT Z");
+                                        var nodeDate = new Date(block_time);
+                                        nodeDate.setHours(nodeDate.getHours() + parseInt(timezoneoffset));
+                                        var timezonedate = dateFormat(nodeDate, "mmm-dd-yyyy, h:MM:ss TT");
+
+                                        var data = action_trace.data;
+                                        // from, to, memo, quantity
+                                        var from = data.from;
+                                        var to = data.to;
+                                        var memo = data.memo;
+                                        var quantity = data.quantity.replace(resultSymbol, '').replace(' ', '');
+
+                                        var transfer_type = "Sent";
+                                        if (to === Account) {
+                                            if (action_trace.name == 'transfer') {
+                                                transfer_type = "Received";
+                                            } else {
+                                                transfer_type = action_trace.name;
+                                            }
+                                        }
+
+                                        var tran_info = [
+                                            trx_id,
+                                            block_num,
+                                            timezonedate,
+                                            from,
+                                            to,
+                                            memo,
+                                            quantity,
+                                            transfer_type,
+                                            resultSymbol
+                                        ];
+
+                                        if (!arrTran.includes(trx_id)) {
+                                            transactions.push(tran_info);
+                                            arrTran.push(trx_id);
+                                            limit++;
+                                        }
+                                    }
+                                    pos -= 1;
+                                });
+                            }else{
+                                returnData.result = false;
+                                returnData.data = "no data"
+                                returnData.pos = pos;
+                                res.json(returnData);
                             }
-                        })
+                        }
                         transactions.reverse();
 
                         returnData.result = true;
-                        returnData.message = 'OK!!';
                         returnData.data = transactions;
+                        returnData.pos = pos;
+                        //console.log("returnData.pos" + returnData.pos);
                         res.json(returnData);
-                    } else {
+
+                    }catch(err){
+                        console.log("error=>" + err);
                         returnData.result = false;
-                        returnData.message = "no data";
-                        returnData.data = [];
+                        returnData.data = err.message;
                         res.json(returnData);
                     }
-                } else {
+                }else{
                     returnData.result = false;
-                    returnData.message = "no data"
-                    returnData.data = [];
+                    returnData.data = "Nothing"
                     res.json(returnData);
                 }
-            } catch (err) {
-                returnData.result = false;
-                returnData.message = "Error occurred.";
-                returnData.data = [];
-                res.json(returnData);
-            }
-        })();
+            })();
+        }catch (e) {
+            console.log("getActions error:" + e);
+        }
     },
 
     /** 비밀번호 찾기 */
@@ -707,7 +1022,34 @@ var outerApiController = {
             res.json({result: false, message: 'error occurred'});
         });
     },
-
+    // 토큰 리스트 출력
+    searchTokenList: function(req, res){
+        var returnData = {
+            result: '',
+            data : '',
+        }
+        var params = {
+            searchKeyword : ''
+        }
+        const result = tokenModel.searchTokens(params, function(err, searchTokensResult){
+            try{
+                if(searchTokensResult.length == 0){
+                    returnData.result = false;
+                    res.json(returnData);
+                }else{
+                    returnData.result = true;
+                    var symbols = [];
+                    searchTokensResult.forEach(function(el, i){
+                        symbols.push(el.symbol);
+                    });
+                    returnData.data = symbols;
+                    res.json(returnData);
+                }
+            }catch (e) {
+                console.log("searchTokens err:" + e);
+            }
+        })
+    },
 }
 
 module.exports = outerApiController;

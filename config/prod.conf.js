@@ -38,6 +38,8 @@ module.exports = {
     'homeUrl' : 'https://wallet.oasisbloc.io',
     'awsEmailHost': 'email-smtp.us-west-2.amazonaws.com',
     'awsEmailPort': 587,
+//    'awsEmailId': 'AKIA4WYX424ZT6467IAV',
+//    'awsEmailPw': '5opB5dxQLUuM7fDTDCAZPx4lb8L+3LpE8ewglajR',
     'awsEmailId': 'AKIAJCV72P32E3C7TW2A',
     'awsEmailPw': 'AvtFPG0Riv9WgAZy6eE3OsC6MwTxxHdJnJdIMsvAmZeL',
     'webmasterEmail' : 'webmaster@oasisbloc.io',

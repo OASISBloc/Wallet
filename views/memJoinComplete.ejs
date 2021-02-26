@@ -1,17 +1,24 @@
-		<!-- 본문영역 -->
+<!-- 본문영역 -->
+<script>
+    try{
 
-		<article class="white-note account-complete">
-			
-			<h2>Account creation is complete!</h2>
-			<div class="account-cont">
-				<p class="creat-account">Created account : <strong><%=memAccount%></strong></p>
-				<div class="info">
-					<p>If the button does not work, copy the link below and proceed to your Web browser.</p>
-					<a href="https://oasisblocexplorer.io/account/<%=memAccount%>" class="txt-link" target="_blank" title="New Window">https://oasisblocexplorer.io/account/<%=memAccount%></a>
-				</div>
-			</div>
-			<a href="/" class="btn large blue">OK</a>
+    }catch (e) {
+        console.log("errrr" + e);
+    }
+</script>
+<article class="white-note account-complete">
 
-		</article>
+    <h2>Account creation is complete!</h2>
+    <div class="account-cont">
+        <p class="creat-account">Created account : <strong><%=memAccount%></strong></p>
+        <div class="info">
+            <p>If the button does not work, copy the link below and proceed to your Web browser.</p>
+            <a href="<%=config.explorerUrl%>/search?q=<%=memAccount%>" class="txt-link" target="_blank" title="New Window"><%=config.explorerUrl%>/search?q=<%=memAccount%></a>
+        </div>
+    </div>
+    <a href="/" class="btn large blue">OK</a>
 
-		<!-- //본문영역 -->
+</article>
+
+<!-- //본문영역 -->
+
