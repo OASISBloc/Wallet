@@ -4,9 +4,9 @@ var mysql = require('mysql');
  * mysql Connection info
  */
 var connection = mysql.createPool({
-    host    : '220.75.229.133',
-    user    : 'oasisdev',
-    password: 'mt393939',
+    host    : 'oasiscamp.chqqcd2uotde.ap-southeast-1.rds.amazonaws.com',
+    user    : 'id',
+    password: 'pw',
     port    : '3306',
     database: 'oasisdb',
     multipleStatements: true
@@ -15,34 +15,32 @@ var connection = mysql.createPool({
 module.exports = {
     'connection' : connection,
     'domain' : 'wallet.oasisbloc.io',
-    'blockchain' : 'eos',
+    'blockchain' : 'OSB',
     'protocol' : 'https',
-    'host' : 'osbcamprpc.doublechain.co.kr',
+    
+    'host' : 'ssagajilove.oasisbloc.io',    //3.1.224.25
     'port' : 443,
-    'chainId' : 'a3b6669034ab27beb95fa9c5b5f6c2d412a1026aee66df89dd8b80ca4f2485a3',
+    'chainId' : 'chain.id',
     'osbMoAccount' : 'osb.account',
-    'osbMoPrivateKey' : '5JjTCawrjo4jciEXiNKcH4NG5dPRt3TWZ9jGWJoDkjVBwjqbzqT',
-    'osbMoPublicKey' : 'OSB6XLr1eU44uzcjwXaFDPvJb5rvAcTct63PrqsZjekn2ULt4fTu7',
+    'osbMoPrivateKey' : 'osb.mo.private.key',
+    'osbMoPublicKey' : 'osb.mo.public.key',
     'osbTransfer' : 'osbio.token',
 
-    'aes256Key' : '2727be866de80a8d44fd600d9b7192ddadd00b0254dae13135152741c39342d1',
-    'aes256Iv' : '5ae5b428e7d39e5f6f34caaecdd6ec21',
+    'aes256Key' : 'aes.256.key',
+    'aes256Iv' : 'aes.256.iv',
     'salt' : '{1357902468}',
-    'homeUrl' : 'http://dev.doublechain.co.kr:3000',
+    'homeUrl' : 'https://wallet.oasisbloc.io',
     'awsEmailHost': 'email-smtp.us-west-2.amazonaws.com',
     'awsEmailPort': 587,
-    'awsEmailId': 'AKIA4WYX424ZT6467IAV',
-    'awsEmailPw': '5opB5dxQLUuM7fDTDCAZPx4lb8L+3LpE8ewglajR',
+    'awsEmailId': 'aws.email.id',
+    'awsEmailPw': 'aws.email.pw',
     'webmasterEmail' : 'webmaster@oasisbloc.io',
     'supportEmail' : 'support@oasisbloc.io',
-    'explorerUrl' : 'https://osbcampexplorer.doublechain.co.kr',
+    'explorerUrl' : 'https://explorer.oasisbloc.io',
 
-    //for localhost
-    'recaptchaSite' : '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
-    'recaptchaSecret' : '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe',
-    // 'recaptchaSite' : '6LeSmHcUAAAAAOiGDaEiebhai9svqQq4hpJyE0NJ',
-    // 'recaptchaSecret' : '6LeSmHcUAAAAAIPqikkF9E9eiyF9r8zku_gM_gEa',
+    'recaptchaSite' : 'recaptcha.site',
+    'recaptchaSecret' : 'recaptcha.secret',
 
-    'lockupContract' : 'lockuptoken1',
-    'checkHost' : 'localhost'
+    'lockupContract' : 'lockuptokens',
+    'checkHost' : 'wallet.oasisbloc.io'
 }
