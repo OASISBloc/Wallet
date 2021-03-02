@@ -18,7 +18,7 @@ module.exports = {
     'blockchain' : 'OSB',
     'protocol' : 'https',
     
-    'host' : 'host',    //3.1.224.25
+    'host' : 'host', 
     'port' : 443,
     'chainId' : 'chain.id',
     'osbMoAccount' : 'osb.account',

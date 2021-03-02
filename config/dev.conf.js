@@ -18,7 +18,7 @@ module.exports = {
     'blockchain' : 'OSB',
     'protocol' : 'https',
     
-    'host' : 'ssagajilove.oasisbloc.io',    //3.1.224.25
+    'host' : 'host',    //3.1.224.25
     'port' : 443,
     'chainId' : 'chain.id',
     'osbMoAccount' : 'osb.account',
@@ -30,7 +30,7 @@ module.exports = {
     'aes256Iv' : 'aes.256.iv',
     'salt' : '{salt}',
     'homeUrl' : 'https://wallet.oasisbloc.io',
-    'awsEmailHost': 'email-smtp.us-west-2.amazonaws.com',
+    'awsEmailHost': 'aws.email.host',
     'awsEmailPort': 1234,
     'awsEmailId': 'aws.email.id',
     'awsEmailPw': 'aws.email.pw',
