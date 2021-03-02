@@ -4,7 +4,7 @@ var mysql = require('mysql');
  * mysql Connection info
  */
 var connection = mysql.createPool({
-    host    : 'oasiscamp.chqqcd2uotde.ap-southeast-1.rds.amazonaws.com',
+    host    : 'host',
     user    : 'id',
     password: 'pw',
     port    : '3306',
@@ -28,10 +28,10 @@ module.exports = {
 
     'aes256Key' : 'aes.256.key',
     'aes256Iv' : 'aes.256.iv',
-    'salt' : '{1357902468}',
+    'salt' : '{salt}',
     'homeUrl' : 'https://wallet.oasisbloc.io',
     'awsEmailHost': 'email-smtp.us-west-2.amazonaws.com',
-    'awsEmailPort': 587,
+    'awsEmailPort': 1234,
     'awsEmailId': 'aws.email.id',
     'awsEmailPw': 'aws.email.pw',
     'webmasterEmail' : 'webmaster@oasisbloc.io',
