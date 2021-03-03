@@ -33,7 +33,7 @@
     "nodemailer-smtp-transport": "^2.7.4",
     "Npm": "^3.0.0",
     "path": "^0.12.7",
-    "pug": "^3.0.0",
+    "pug": "^3.0.1",
     "request": "^2.88.2",
     "scatterjs-core": "^2.7.18",
     "scatterjs-plugin-eosjs": "^1.5.1",
