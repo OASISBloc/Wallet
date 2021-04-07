@@ -104,41 +104,41 @@ var joinController = {
 
                         // Added by wschoi
                         // await sleep(2000);
-
-                        try {
-                            result = await rpc.get_account(params.memAccount);
-                            console.log("result=>" + result);
-                            if(result) {
-                                // account / publickey 등록
-                                joinModel.createAccount(params, function(err, crateAccountResult) {
-                                    if (err) {
-                                        console.log("error=>" + err);
-                                        res.json({result: false, message: 'create account failed.'});
-                                    } else {
-                                        // 메일 인증번호 생성 및 DB등록
-                                        var certificationKey = cryptoRandomString(16);
-                                        var mailParmas = {
-                                            'account' : params.memAccount
-                                            , 'retryKey' : certificationKey
-                                            , 'homeUrl' : config.homeUrl
-                                            , userEmail : params.memEmail
-                                            , emailSubject : 'Account creation is complete!'
-                                            , emailFormNm : 'mailCreateAccount.html'
-                                            , explorerUrl : config.explorerUrl
+                        res.json({result: true, rtnDatas: params});
+                        setTimeout(function(){  
+                            try {
+                                result = rpc.get_account(params.memAccount);
+                                console.log("result=>" + result);
+                                if(result) {
+                                    // account / publickey 등록
+                                    joinModel.createAccount(params, function(err, crateAccountResult) {
+                                        if (err) {
+                                            console.log("error=>" + err);
+                                            // res.json({result: false, message: 'create account failed.'});
+                                        } else {
+                                            // 메일 인증번호 생성 및 DB등록
+                                            var certificationKey = cryptoRandomString(16);
+                                            var mailParmas = {
+                                                'account' : params.memAccount
+                                                , 'retryKey' : certificationKey
+                                                , 'homeUrl' : config.homeUrl
+                                                , userEmail : params.memEmail
+                                                , emailSubject : 'Account creation is complete!'
+                                                , emailFormNm : 'mailCreateAccount.html'
+                                                , explorerUrl : config.explorerUrl
+                                            }
+                                            // 공통 인증관련 메일 발송 처리
+                                            commonController.awsMail(mailParmas);
+                                            console.log("after awsmail send===");
+                                            // res.json({result: true, rtnDatas: params, message: 'create account OK!!'});
                                         }
-                                        // 공통 인증관련 메일 발송 처리
-                                        commonController.awsMail(mailParmas);
-                                        console.log("after awsmail send===");
-                                        res.json({result: true, rtnDatas: params, message: 'create account OK!!'});
-                                    }
-                                });
+                                    });
+                                }
+                            } catch(err) {
+                                console.log("err1===" +err);
+                                // res.json({result: false, message: 'create account failed.'});
                             }
-                        } catch(err) {
-
-                            console.log("err1===" +err);
-                            res.json({result: false, message: 'create account failed.'});
-
-                        }
+                        },60000);
                     })();
                 });
             })();
