@@ -374,8 +374,7 @@ var apiController = {
             console.log("key:" + key);
             console.log("symbol:" + symbol);
 
-            // var contents = fs.readFileSync('/Users/dc/.tmp/pastday/mealworm/loveheart', 'utf8');
-            var contents = fs.readFileSync('/home/dc-server1/.tmp/pastday/mealworm/loveheart', 'utf8');
+            var contents = fs.readFileSync(path, 'utf8');
             let prvkey = contents;
             console.log("prvkey = " + contents);
             prvkey = cryptoJS.AES.decrypt(key, prvkey).toString(cryptoJS.enc.Utf8);
@@ -615,8 +614,7 @@ var apiController = {
 
     getRandom: function(req, res) {
         try {
-            // var contents = fs.readFileSync('/Users/dc/.tmp/pastday/mealworm/loveheart', 'utf8');
-            var contents = fs.readFileSync('/home/dc-server1/.tmp/pastday/mealworm/loveheart', 'utf8');
+            var contents = fs.readFileSync(path, 'utf8');
             console.log("random =" + contents);
             res.json({result: true, data: contents});
         }catch (e) {
