@@ -492,7 +492,6 @@ var outerApiController = {
             var amount = req.body.amount ? req.body.amount : '';
             var memo = req.body.memo ? req.body.memo : '';
             var key = req.body.prvkey ? req.body.prvkey : '';
-            //var key = "U2FsdGVkX1/DjjMDHuufsBJ71l56c3BkXbRlQrhYR3rPG90NfCx0C69mhq+/l4ipCPPHiOy95lyThvMKJKhytgiikWppluSpv6usgoR8eyQ=";
             var symbol = req.body.symbol ? req.body.symbol : '';
             console.log("sendTo:" + sendTo);
             console.log("amount:" + amount);
@@ -503,9 +502,6 @@ var outerApiController = {
             var returnData = {
                 result: ''
             };
-
-            // var contents = fs.readFileSync('/Users/dc/.tmp/pastday/mealworm/loveheart', 'utf8');
-            // // var contents = fs.readFileSync('/home/dc-server1/.tmp/pastday/mealworm/loveheart', 'utf8');
             // var iv = contents
             
             // iv = Buffer.from(iv, 'base64').toString();
@@ -520,9 +516,8 @@ var outerApiController = {
             
             var tmp = key.split("*");
             
-            var salt = cryptoJS.enc.Utf8.parse("20140401");
-            // var password = fs.readFileSync('/Users/dc/.tmp/pastday/mealworm/loveheart', 'utf8').toString();
-            var password = fs.readFileSync('/home/dc-server1/.tmp/pastday/mealworm/loveheart', 'utf8').toString();
+            var salt = cryptoJS.enc.Utf8.parse(salt);
+            var password = fs.readFileSync(path, 'utf8').toString();
             password = password.replace('\n', '');
             var keyBits = cryptoJS.PBKDF2(password, salt, {
                 hasher: cryptoJS.algo.SHA1,
